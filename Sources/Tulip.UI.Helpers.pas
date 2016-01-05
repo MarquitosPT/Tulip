@@ -58,9 +58,17 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.Math, System.Generics.Collections,
-  // Asphyre Units
-  AsphyreDef, AsphyreTypes, AsphyreArchives, AsphyreFonts, AsphyreImages,
-  AsphyreXML, MediaUtils, StreamUtils, Vectors2, Vectors2px,
+  // pxl Units
+  PXL.Archives,
+  PXL.Bitmaps,
+  PXL.Classes,
+  PXL.Images,
+  PXL.ImageFormats,
+  PXL.Fonts,
+  PXL.Surfaces,
+  PXL.Types,
+  PXL.TypeDef,
+  PXL.XML,
   // Tulip UI Units
   Tulip.UI.Types;
 
@@ -72,12 +80,12 @@ const
 type
 
 {$REGION 'TAsphyreFont'}
-  TAsphyreFontHelper = class helper for TAsphyreFont
+  TBitmapFontHelper = class helper for TBitmapFont
   private
     function ParseStream(const Stream: TMemoryStream): Boolean;
 
   public
-    function SaveXmlToArchive(const Archive: TAsphyreArchive;
+    function SaveXmlToArchive(const Archive: TArchive;
       const Folder: String = foNone): Boolean;
     function SaveXmlToArchiveFile(const FileName: String;
       const Folder: String = foNone): Boolean;
@@ -85,7 +93,7 @@ type
     function SaveXmlToMemStream: TMemoryStream;
 
     procedure TextRectEx(const Pos, Size: TPoint2; const Text: UniString;
-      const Colors: TColor2; Alpha: SizeFloat;
+      const Colors: TIntColor2; Alpha: VectorFloat;
       const HorizontalAlign: THorizontalAlign = aLeft;
       const VerticalAlign: TVerticalAlign = aTop;
       ParagraphLine: Boolean = True);
@@ -93,26 +101,26 @@ type
 {$ENDREGION}
 {$REGION 'TAsphyreFonts'}
 
-  TAsphyreFontsHelper = class helper for TAsphyreFonts
+  TBitmapFontsHelper = class helper for TBitmapFonts
     function InsertFromArchive(const Name: String;
-      const Archive: TAsphyreArchive; const Folder: String = foNone): Integer;
+      const Archive: TArchive; const Folder: String = foNone): Integer;
     function InsertFromArchiveFile(const Name, FileName: String;
       const Folder: String = foNone): Integer;
 
-    function InsertFromMemStream(const Name: String;
-      const FontStream, ImageStream: TMemoryStream): Integer;
+//    function InsertFromMemStream(const Name: String;
+//      const FontStream, ImageStream: TMemoryStream): Integer;
 
-    function SaveAllToArchive(const Archive: TAsphyreArchive;
+    function SaveAllToArchive(const Archive: TArchive;
       const Folder: String = foNone): Boolean;
     function SaveAllToArchiveFile(const FileName: String;
       const Folder: String = foNone): Boolean;
 
-    function SaveToArchive(const Name: String; const Archive: TAsphyreArchive;
+    function SaveToArchive(const Name: String; const Archive: TArchive;
       const Folder: String = foNone): Boolean; overload;
     function SaveToArchiveFile(const Name, FileName: String;
       const Folder: String = foNone): Boolean; overload;
 
-    function SaveToArchive(const Index: Integer; const Archive: TAsphyreArchive;
+    function SaveToArchive(const Index: Integer; const Archive: TArchive;
       const Folder: String = foNone): Boolean; overload;
     function SaveToArchiveFile(const Index: Integer; const FileName: String;
       const Folder: String = foNone): Boolean; overload;
@@ -120,8 +128,8 @@ type
 {$ENDREGION}
 {$REGION 'TAsphyreImage'}
 
-  TAsphyreImageHelper = class helper for TAsphyreImage
-    function SaveToArchive(const Archive: TAsphyreArchive;
+  TAtlasImageHelper = class helper for TAtlasImage
+    function SaveToArchive(const Archive: TArchive;
       const Folder: String = foNone): Boolean;
     function SaveToArchiveFile(const FileName: String;
       const Folder: String = foNone): Boolean;
@@ -131,26 +139,26 @@ type
 {$ENDREGION}
 {$REGION 'TAsphyreImages'}
 
-  TAsphyreImagesHelper = class helper for TAsphyreImages
+  TAtlasImagesHelper = class helper for TAtlasImages
     function InsertFromArchive(const Name: String;
-      const Archive: TAsphyreArchive; const Folder: String = foNone): Integer;
+      const Archive: TArchive; const Folder: String = foNone): Integer;
     function InsertFromArchiveFile(const Name, FileName: String;
       const Folder: String = foNone): Integer;
 
     function InsertFromStream(const Name: String;
       const ImageStream: TMemoryStream): Integer;
 
-    function SaveAllToArchive(const Archive: TAsphyreArchive;
+    function SaveAllToArchive(const Archive: TArchive;
       const Folder: String = foNone): Boolean;
     function SaveAllToArchiveFile(const FileName: String;
       const Folder: String = foNone): Boolean;
 
-    function SaveToArchive(const Name: String; const Archive: TAsphyreArchive;
+    function SaveToArchive(const Name: String; const Archive: TArchive;
       const Folder: String = foNone): Boolean; overload;
     function SaveToArchiveFile(const Name, FileName: String;
       const Folder: String = foNone): Boolean; overload;
 
-    function SaveToArchive(const Index: Integer; const Archive: TAsphyreArchive;
+    function SaveToArchive(const Index: Integer; const Archive: TArchive;
       const Folder: String = foNone): Boolean; overload;
     function SaveToArchiveFile(const Index: Integer; const FileName: String;
       const Folder: String = foNone): Boolean; overload;
@@ -162,7 +170,7 @@ implementation
 {$REGION 'TAsphyreFont'}
 { TAsphyreFontHelper }
 
-function TAsphyreFontHelper.ParseStream(const Stream: TMemoryStream): Boolean;
+function TBitmapFontHelper.ParseStream(const Stream: TMemoryStream): Boolean;
 var
   Node, Child: TXMLNode;
 begin
@@ -172,18 +180,21 @@ begin
   if (not Result) then
     Exit;
 
-  Self.FFontSize.x := ParseInt(Node.FieldValue['width'], 0);
-  Self.FFontSize.y := ParseInt(Node.FieldValue['height'], 0);
-  Self.Kerning := ParseFloat(Node.FieldValue['kerning'], 0);
+  Self.FSize.x := StrToIntDef(Node.FieldValue['width'], 0);
+  Self.FSize.y := StrToIntDef(Node.FieldValue['height'], 0);
+
+  Self.FSpaceWidth := StrToIntDef(Node.FieldValue['space'], 0);
+  if Self.FSpaceWidth <= 0 then
+    Self.FSpaceWidth := Self.FSize.X div 4;
 
   for Child in Node do
     if (SameText(Child.Name, 'item')) then
-      Self.ParseEntry(Child);
+      Self.ReadEntryFromXML(Child);
 
   FreeAndNil(Node);
 end;
 
-function TAsphyreFontHelper.SaveXmlToArchive(const Archive: TAsphyreArchive;
+function TBitmapFontHelper.SaveXmlToArchive(const Archive: TArchive;
   const Folder: String = foNone): Boolean;
 var
   Stream: TMemoryStream;
@@ -198,21 +209,19 @@ begin
   if Stream = nil then
     Exit;
 
-  Result := Archive.WriteRecord(Folder + Self.Name + '.xml', Stream.Memory,
-    Stream.Size, artFile);
+  Result := Archive.WriteStream(Folder + Self.Name + '.xml', Stream, TArchive.TEntryType.AnyFile);
 
   Stream.Free;
 end;
 
-function TAsphyreFontHelper.SaveXmlToArchiveFile(const FileName: String;
+function TBitmapFontHelper.SaveXmlToArchiveFile(const FileName: String;
   const Folder: String = foNone): Boolean;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomUpdate;
+  Media.OpenMode := TArchive.TOpenMode.Update;
 
   Result := Media.OpenFile(FileName);
 
@@ -224,7 +233,7 @@ begin
   Media.Free;
 end;
 
-function TAsphyreFontHelper.SaveXmlToMemStream: TMemoryStream;
+function TBitmapFontHelper.SaveXmlToMemStream: TMemoryStream;
 var
   Node, Child: TXMLNode;
   Stream: TMemoryStream;
@@ -233,22 +242,24 @@ var
   I: Integer;
 begin
   Node := TXMLNode.Create('font');
-  Node.AddField('width', IntToStr(Self.FFontSize.x));
-  Node.AddField('height', IntToStr(Self.FFontSize.y));
-  Node.AddField('kerning', FloatToStr(Self.Kerning));
+  Node.AddField('width', IntToStr(Self.FSize.x));
+  Node.AddField('height', IntToStr(Self.FSize.y));
+  Node.AddField('space', FloatToStr(Self.SpaceWidth));
+  //Node.AddField('kerning', FloatToStr(Self.Kerning));
 
   for I := 0 to 65535 do
   begin
-    Entry := Self.Entries[I];
+    Entry := Self.FEntries[I];
 
-    if ((Entry.Top = 0) and (Entry.Pos = Point2px(0, 0)) and
-      (Entry.Size = Point2px(0, 0)) and (Entry.Leading = 0) and
-      (Entry.Trailing = 0)) then
+    if ((Entry.TopBase = 0) and (Entry.BottomBase = 0)
+      and (Entry.MapLeft = 0) and (Entry.MapTop = 0)
+      and (Entry.MapWidth = 0) and (Entry.MapHeight = 0)
+      and (Entry.LeadingSpace = 0) and (Entry.TrailingSpace = 0)) then
     begin
       Continue;
     end;
 
-    Child := Node.AddChild('item');
+    Child := Node.AddChildNode('item');
 
     if I <= 126 then
     begin
@@ -260,13 +271,14 @@ begin
     end;
     if (I > 32) and (I <> 34) then
       Child.AddField('raw', WideChar(I));
-    Child.AddField('top', IntToStr(Entry.Top));
-    Child.AddField('x', IntToStr(Entry.Pos.x));
-    Child.AddField('y', IntToStr(Entry.Pos.y));
-    Child.AddField('width', IntToStr(Entry.Size.x));
-    Child.AddField('height', IntToStr(Entry.Size.y));
-    Child.AddField('leading', IntToStr(Entry.Leading));
-    Child.AddField('trailing', IntToStr(Entry.Trailing));
+    Child.AddField('top', IntToStr(Entry.TopBase));
+    Child.AddField('bottom', IntToStr(Entry.BottomBase));
+    Child.AddField('x', IntToStr(Entry.MapLeft));
+    Child.AddField('y', IntToStr(Entry.MapTop));
+    Child.AddField('width', IntToStr(Entry.MapWidth));
+    Child.AddField('height', IntToStr(Entry.MapHeight));
+    Child.AddField('leading', IntToStr(Entry.LeadingSpace));
+    Child.AddField('trailing', IntToStr(Entry.TrailingSpace));
   end;
 
   Stream := TMemoryStream.Create;
@@ -285,10 +297,11 @@ begin
   FreeAndNil(Node);
 end;
 
-procedure TAsphyreFontHelper.TextRectEx(const Pos, Size: TPoint2;
-  const Text: UniString; const Colors: TColor2; Alpha: SizeFloat;
-  const HorizontalAlign: THorizontalAlign; const VerticalAlign: TVerticalAlign;
-  ParagraphLine: Boolean);
+procedure TBitmapFontHelper.TextRectEx(const Pos, Size: TPoint2; const Text: UniString;
+      const Colors: TIntColor2; Alpha: VectorFloat;
+      const HorizontalAlign: THorizontalAlign = aLeft;
+      const VerticalAlign: TVerticalAlign = aTop;
+      ParagraphLine: Boolean = True);
 var
   Para, ParaTo: Integer;
   WordNo, WordTo, NoWords, Index: Integer;
@@ -301,184 +314,186 @@ var
   Lines: TList<UniString>;
   ParaList: TList<Integer>;
 begin
-  Lines := TList<UniString>.Create;
-  ParaList := TList<Integer>.Create;
+  Self.DrawTextAligned(Pos, Text, Colors, TTextAlignment(HorizontalAlign), TTextAlignment(VerticalAlign), Alpha, True);
 
-  Self.SplitText(Text);
-
-  Para := -1;
-  ParaNo := 0;
-  WordNo := 0;
-
-  Self.ClearStyles();
-  Self.PushStyle(Colors, 0);
-
-  CurPos.x := Pos.x;
-  CurPos.y := Pos.y;
-  Height := 0;
-  MaxSize := Size.x;
-
-  while (WordNo < Length(Self.Words)) do
-  begin
-    CurSize := 0;
-    BlnkSpace := 0;
-
-    WordTo := WordNo;
-    ParaTo := Para;
-
-    while (CurSize + BlnkSpace < MaxSize) and (WordTo < Length(Self.Words)) and
-      (ParaTo = Para) do
-    begin
-      CurSize := CurSize + TextWidth(Self.Words[WordTo].Text);
-      BlnkSpace := BlnkSpace + Self.FWhitespace * Self.FScale;
-      ParaTo := Self.Words[WordTo].ParaNum;
-
-      Inc(WordTo);
-    end;
-
-    NoWords := (WordTo - WordNo) - 1;
-    if (WordTo >= Length(Self.Words)) and (CurSize + BlnkSpace < MaxSize) then
-    begin
-      Inc(NoWords);
-    end;
-
-    if (NoWords < 1) then
-    begin
-      // Case 1. New paragraph.
-      if (ParaTo <> Para) then
-      begin
-        Para := ParaTo;
-
-        if (WordNo >= 1) and (HorizontalAlign = aJustify) then
-        begin
-          ParaList.Add(ParaNo);
-        end;
-
-        if (WordNo >= 1) and (ParagraphLine) then
-          Lines.Add('');
-
-        Inc(ParaNo);
-        Continue;
-      end
-      else
-        // Case 2. Exhausted words or size doesn't fit.
-        Break;
-    end;
-
-    if ((Height + Self.FLinespace) * (Lines.Count + 1)) <= Size.y then
-    begin
-      LineText := '';
-      for Index := WordNo to WordNo + NoWords - 1 do
-      begin
-        if Index = (WordNo + NoWords - 1) then
-          LineText := LineText + Self.Words[Index].Text
-        else
-          LineText := LineText + Self.Words[Index].Text + ' ';
-      end;
-      Lines.Add(LineText);
-
-      // Calculate max line height
-      Height := Max(Height, TextHeight(LineText));
-    end
-    else
-      Break;
-
-    Inc(ParaNo);
-    Inc(WordNo, NoWords);
-  end;
-
-  // Draw all lines
-  for I := 0 to Lines.Count - 1 do
-  begin
-    EmptySizeX := Size.x - TextWidth(Lines[I]);
-    EmptySizeY := Size.y - ((Height + Self.FLinespace) * (Lines.Count));
-
-    case VerticalAlign of
-      aTop:
-        YPos := CurPos.y;
-      aMiddle:
-        YPos := CurPos.y + Round(EmptySizeY / 2);
-      aBottom:
-        YPos := CurPos.y + Round(EmptySizeY);
-    else
-      YPos := CurPos.y;
-    end;
-
-    case HorizontalAlign of
-      aLeft:
-        xPos := CurPos.x;
-      aCenter:
-        xPos := CurPos.x + Round(EmptySizeX / 2);
-      aRight:
-        xPos := CurPos.x + Round(EmptySizeX);
-      aJustify:
-        begin
-          xPos := CurPos.x;
-
-          Self.SplitText(Lines[I]);
-
-          PreSize := 0.0;
-          for index := 0 to Length(Self.Words) - 1 do
-          begin
-            PreSize := PreSize + TextWidth(Self.Words[Index].Text);
-          end;
-
-          if (Length(Self.Words) - 1) > 0 then
-            Ident := (Size.x - PreSize) / (Length(Self.Words) - 1)
-          else
-            Ident := 0.0;
-
-          // Next line is paragraph
-          for index := 0 to ParaList.Count - 1 do
-          begin
-            if ParagraphLine then
-              if (ParaList[index] = (I + 2)) then
-              begin
-                Ident := Self.FWhitespace * Self.FScale;
-                Break;
-              end
-              else if (ParaList[index] = (I + 1)) then
-              begin
-                Ident := Self.FWhitespace * Self.FScale;
-                Break;
-              end;
-          end;
-
-          // Is the last Line
-          if (I = (Lines.Count - 1)) then
-            Ident := Self.FWhitespace * Self.FScale;
-
-          // Draw word by word
-          PosAdd := 0.0;
-          for Index := 0 to Length(Self.Words) - 1 do
-          begin
-            Self.DisplayText(Point2(xPos + Round(PosAdd), YPos),
-              Self.Words[Index].Text, Alpha);
-            PosAdd := PosAdd + Self.TextWidth(Self.Words[Index].Text) + Ident;
-          end;
-        end
-    else
-      xPos := CurPos.x;
-    end;
-
-    if HorizontalAlign <> aJustify then
-      Self.DisplayText(Point2(xPos, YPos), Lines[I], Alpha);
-
-    CurPos.x := Pos.x;
-    CurPos.y := CurPos.y + Height + Self.FLinespace;
-  end;
-
-  Self.ClearStyles();
-
-  Lines.Free;
-  ParaList.Free;
+//  Lines := TList<UniString>.Create;
+//  ParaList := TList<Integer>.Create;
+//
+//  Self.SplitText(Text);
+//
+//  Para := -1;
+//  ParaNo := 0;
+//  WordNo := 0;
+//
+//  Self.ClearStyles();
+//  Self.PushStyle(Colors, 0);
+//
+//  CurPos.x := Pos.x;
+//  CurPos.y := Pos.y;
+//  Height := 0;
+//  MaxSize := Size.x;
+//
+//  while (WordNo < Length(Self.Words)) do
+//  begin
+//    CurSize := 0;
+//    BlnkSpace := 0;
+//
+//    WordTo := WordNo;
+//    ParaTo := Para;
+//
+//    while (CurSize + BlnkSpace < MaxSize) and (WordTo < Length(Self.Words)) and
+//      (ParaTo = Para) do
+//    begin
+//      CurSize := CurSize + TextWidth(Self.Words[WordTo].Text);
+//      BlnkSpace := BlnkSpace + Self.FWhitespace * Self.FScale;
+//      ParaTo := Self.Words[WordTo].ParaNum;
+//
+//      Inc(WordTo);
+//    end;
+//
+//    NoWords := (WordTo - WordNo) - 1;
+//    if (WordTo >= Length(Self.Words)) and (CurSize + BlnkSpace < MaxSize) then
+//    begin
+//      Inc(NoWords);
+//    end;
+//
+//    if (NoWords < 1) then
+//    begin
+//      // Case 1. New paragraph.
+//      if (ParaTo <> Para) then
+//      begin
+//        Para := ParaTo;
+//
+//        if (WordNo >= 1) and (HorizontalAlign = aJustify) then
+//        begin
+//          ParaList.Add(ParaNo);
+//        end;
+//
+//        if (WordNo >= 1) and (ParagraphLine) then
+//          Lines.Add('');
+//
+//        Inc(ParaNo);
+//        Continue;
+//      end
+//      else
+//        // Case 2. Exhausted words or size doesn't fit.
+//        Break;
+//    end;
+//
+//    if ((Height + Self.FLinespace) * (Lines.Count + 1)) <= Size.y then
+//    begin
+//      LineText := '';
+//      for Index := WordNo to WordNo + NoWords - 1 do
+//      begin
+//        if Index = (WordNo + NoWords - 1) then
+//          LineText := LineText + Self.Words[Index].Text
+//        else
+//          LineText := LineText + Self.Words[Index].Text + ' ';
+//      end;
+//      Lines.Add(LineText);
+//
+//      // Calculate max line height
+//      Height := Max(Height, TextHeight(LineText));
+//    end
+//    else
+//      Break;
+//
+//    Inc(ParaNo);
+//    Inc(WordNo, NoWords);
+//  end;
+//
+//  // Draw all lines
+//  for I := 0 to Lines.Count - 1 do
+//  begin
+//    EmptySizeX := Size.x - TextWidth(Lines[I]);
+//    EmptySizeY := Size.y - ((Height + Self.FLinespace) * (Lines.Count));
+//
+//    case VerticalAlign of
+//      aTop:
+//        YPos := CurPos.y;
+//      aMiddle:
+//        YPos := CurPos.y + Round(EmptySizeY / 2);
+//      aBottom:
+//        YPos := CurPos.y + Round(EmptySizeY);
+//    else
+//      YPos := CurPos.y;
+//    end;
+//
+//    case HorizontalAlign of
+//      aLeft:
+//        xPos := CurPos.x;
+//      aCenter:
+//        xPos := CurPos.x + Round(EmptySizeX / 2);
+//      aRight:
+//        xPos := CurPos.x + Round(EmptySizeX);
+//      aJustify:
+//        begin
+//          xPos := CurPos.x;
+//
+//          Self.SplitText(Lines[I]);
+//
+//          PreSize := 0.0;
+//          for index := 0 to Length(Self.Words) - 1 do
+//          begin
+//            PreSize := PreSize + TextWidth(Self.Words[Index].Text);
+//          end;
+//
+//          if (Length(Self.Words) - 1) > 0 then
+//            Ident := (Size.x - PreSize) / (Length(Self.Words) - 1)
+//          else
+//            Ident := 0.0;
+//
+//          // Next line is paragraph
+//          for index := 0 to ParaList.Count - 1 do
+//          begin
+//            if ParagraphLine then
+//              if (ParaList[index] = (I + 2)) then
+//              begin
+//                Ident := Self.FWhitespace * Self.FScale;
+//                Break;
+//              end
+//              else if (ParaList[index] = (I + 1)) then
+//              begin
+//                Ident := Self.FWhitespace * Self.FScale;
+//                Break;
+//              end;
+//          end;
+//
+//          // Is the last Line
+//          if (I = (Lines.Count - 1)) then
+//            Ident := Self.FWhitespace * Self.FScale;
+//
+//          // Draw word by word
+//          PosAdd := 0.0;
+//          for Index := 0 to Length(Self.Words) - 1 do
+//          begin
+//            Self.DisplayText(Point2(xPos + Round(PosAdd), YPos),
+//              Self.Words[Index].Text, Alpha);
+//            PosAdd := PosAdd + Self.TextWidth(Self.Words[Index].Text) + Ident;
+//          end;
+//        end
+//    else
+//      xPos := CurPos.x;
+//    end;
+//
+//    if HorizontalAlign <> aJustify then
+//      Self.DisplayText(Point2(xPos, YPos), Lines[I], Alpha);
+//
+//    CurPos.x := Pos.x;
+//    CurPos.y := CurPos.y + Height + Self.FLinespace;
+//  end;
+//
+//  Self.ClearStyles();
+//
+//  Lines.Free;
+//  ParaList.Free;
 end;
 {$ENDREGION}
 {$REGION 'TAsphyreFonts'}
 { TAsphyreFontsHelper }
 
-function TAsphyreFontsHelper.InsertFromArchive(const Name: String;
-  const Archive: TAsphyreArchive; const Folder: String = foNone): Integer;
+function TBitmapFontsHelper.InsertFromArchive(const Name: String;
+  const Archive: TArchive; const Folder: String = foNone): Integer;
 var
   FontStream: TMemoryStream;
   ImageStream: TMemoryStream;
@@ -505,23 +520,24 @@ begin
     Exit;
   end;
 
-  Result := InsertFromMemStream(Name, FontStream, ImageStream);
+  Result := Self.AddFromXMLStream('.image', ImageStream, FontStream, Name,  TPixelFormat.Unknown);
+
+  //Result := InsertFromMemStream(Name, FontStream, ImageStream);
 
   FontStream.Free;
   ImageStream.Free;
 end;
 
-function TAsphyreFontsHelper.InsertFromArchiveFile(const Name, FileName: String;
+function TBitmapFontsHelper.InsertFromArchiveFile(const Name, FileName: String;
   const Folder: String = foNone): Integer;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
   Result := -1;
 
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomReadOnly;
+  Media.OpenMode := TArchive.TOpenMode.ReadOnly;
 
   if (Media.OpenFile(FileName)) then
   begin
@@ -531,37 +547,37 @@ begin
   Media.Free;
 end;
 
-function TAsphyreFontsHelper.InsertFromMemStream(const Name: String;
-  const FontStream, ImageStream: TMemoryStream): Integer;
-var
-  ImageIndex: Integer;
-begin
-  Result := -1;
+//function TAsphyreFontsHelper.InsertFromMemStream(const Name: String;
+//  const FontStream, ImageStream: TMemoryStream): Integer;
+//var
+//  ImageIndex: Integer;
+//begin
+//  Result := -1;
+//
+//  // (1) Check whether a valid image list is provided.
+//  if (Self.FImages = nil) then
+//    Exit;
+//
+//  // (2) Resolve the bitmap font's graphics.
+//  ImageIndex := Self.FImages.InsertFromStream(Name, ImageStream);
+//  if (ImageIndex = -1) then
+//    Exit;
+//
+//  // (3) Create new font and try to parse its description.
+//  Result := Self.InsertFont();
+//  if (not Self.FFonts[Result].ParseStream(FontStream)) then
+//  begin
+//    RemoveFont(Result);
+//    Result := -1;
+//    Exit;
+//  end;
+//
+//  // (4) Assign font attributes.
+//  Self.FFonts[Result].ImageIndex := ImageIndex;
+//  Self.FFonts[Result].Name := Name;
+//end;
 
-  // (1) Check whether a valid image list is provided.
-  if (Self.FImages = nil) then
-    Exit;
-
-  // (2) Resolve the bitmap font's graphics.
-  ImageIndex := Self.FImages.InsertFromStream(Name, ImageStream);
-  if (ImageIndex = -1) then
-    Exit;
-
-  // (3) Create new font and try to parse its description.
-  Result := Self.InsertFont();
-  if (not Self.Fonts[Result].ParseStream(FontStream)) then
-  begin
-    RemoveFont(Result);
-    Result := -1;
-    Exit;
-  end;
-
-  // (4) Assign font attributes.
-  Self.Fonts[Result].ImageIndex := ImageIndex;
-  Self.Fonts[Result].Name := Name;
-end;
-
-function TAsphyreFontsHelper.SaveAllToArchive(const Archive: TAsphyreArchive;
+function TBitmapFontsHelper.SaveAllToArchive(const Archive: TArchive;
   const Folder: String = foNone): Boolean;
 var
   I: Integer;
@@ -582,15 +598,14 @@ begin
   Result := True;
 end;
 
-function TAsphyreFontsHelper.SaveAllToArchiveFile(const FileName: String;
+function TBitmapFontsHelper.SaveAllToArchiveFile(const FileName: String;
   const Folder: String = foNone): Boolean;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomUpdate;
+  Media.OpenMode := TArchive.TOpenMode.Update;
 
   Result := Media.OpenFile(FileName);
 
@@ -602,15 +617,15 @@ begin
   Media.Free;
 end;
 
-function TAsphyreFontsHelper.SaveToArchive(const Name: String;
-  const Archive: TAsphyreArchive; const Folder: String = foNone): Boolean;
+function TBitmapFontsHelper.SaveToArchive(const Name: String;
+  const Archive: TArchive; const Folder: String = foNone): Boolean;
 begin
   Result := False;
 
   if (Archive = nil) then
     Exit;
 
-  if not(Self.Images.Image[Name].SaveToArchive(Archive, Folder)) then
+  if not(Self.Font[Name].Image.SaveToArchive(Archive, Folder)) then
   begin
     Exit;
   end;
@@ -623,15 +638,14 @@ begin
   Result := True;
 end;
 
-function TAsphyreFontsHelper.SaveToArchiveFile(const Name, FileName: String;
+function TBitmapFontsHelper.SaveToArchiveFile(const Name, FileName: String;
   const Folder: String = foNone): Boolean;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomUpdate;
+  Media.OpenMode := TArchive.TOpenMode.Update;
 
   Result := Media.OpenFile(FileName);
 
@@ -643,15 +657,15 @@ begin
   Media.Free;
 end;
 
-function TAsphyreFontsHelper.SaveToArchive(const Index: Integer;
-  const Archive: TAsphyreArchive; const Folder: String = foNone): Boolean;
+function TBitmapFontsHelper.SaveToArchive(const Index: Integer;
+  const Archive: TArchive; const Folder: String = foNone): Boolean;
 begin
   Result := False;
 
   if (Archive = nil) then
     Exit;
 
-  if not(Self.Images.Items[Self.Items[Index].ImageIndex].SaveToArchive(Archive, Folder)) then
+  if not(Self.Items[Index].Image.SaveToArchive(Archive, Folder)) then
   begin
     Exit;
   end;
@@ -664,15 +678,14 @@ begin
   Result := True;
 end;
 
-function TAsphyreFontsHelper.SaveToArchiveFile(const Index: Integer;
+function TBitmapFontsHelper.SaveToArchiveFile(const Index: Integer;
   const FileName: String; const Folder: String = foNone): Boolean;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomUpdate;
+  Media.OpenMode := TArchive.TOpenMode.Update;
 
   Result := Media.OpenFile(FileName);
 
@@ -687,8 +700,8 @@ end;
 {$REGION 'TAsphyreImage'}
 { TAsphyreImageHelper }
 
-function TAsphyreImageHelper.SaveToArchive(const Archive: TAsphyreArchive;
-  const Folder: String = foNone): Boolean;
+function TAtlasImageHelper.SaveToArchive(const Archive: TArchive;
+      const Folder: String = foNone): Boolean;
 var
   Stream: TMemoryStream;
 begin
@@ -704,21 +717,19 @@ begin
 
   // position to the beginning of our stream
   Stream.Seek(0, soFromBeginning);
-  Result := Archive.WriteRecord(Folder + Self.Name + '.image', Stream.Memory,
-    Stream.Size, artImage);
+  Result := Archive.WriteStream(Folder + Self.Name + '.image', Stream, TArchive.TEntryType.Image);
 
   Stream.Free;
 end;
 
-function TAsphyreImageHelper.SaveToArchiveFile(const FileName: String;
+function TAtlasImageHelper.SaveToArchiveFile(const FileName: String;
   const Folder: String = foNone): Boolean;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomUpdate;
+  Media.OpenMode := TArchive.TOpenMode.Update;
 
   Result := Media.OpenFile(FileName);
 
@@ -730,7 +741,7 @@ begin
   Media.Free;
 end;
 
-function TAsphyreImageHelper.SaveToMemStream: TMemoryStream;
+function TAtlasImageHelper.SaveToMemStream: TMemoryStream;
 var
   ImageStream: TMemoryStream;
   Bits: Pointer;
@@ -739,50 +750,72 @@ var
   Bytes: Integer;
   TextureNo: Integer;
   BoolResult: Boolean;
+
+
+  Bitmap: TBitmap;
+  Manager: TCustomImageFormatManager;
+  Surface: TPixelSurface;
 begin
+  if Device = nil then
+    Exit(nil);
+
   ImageStream := TMemoryStream.Create;
 
-  // --> Format
-  StreamPutByte(ImageStream, Byte(Self.PixelFormat));
-  // --> Pattern Size
-  StreamPutWord(ImageStream, Self.PatternSize.x);
-  StreamPutWord(ImageStream, Self.PatternSize.y);
-  // --> Pattern Count
-  StreamPutLongInt(ImageStream, Self.PatternCount);
-  // --> Visible Size
-  StreamPutWord(ImageStream, Self.VisibleSize.x);
-  StreamPutWord(ImageStream, Self.VisibleSize.y);
-  // --> Texture Size
-  StreamPutWord(ImageStream, Self.Texture[0].Width);
-  StreamPutWord(ImageStream, Self.Texture[0].Height);
-  // --> Texture Count
-  StreamPutWord(ImageStream, Self.TextureCount);
+  Bitmap := TBitmap.Create(Device);
+  try
+    //Self.Texture[0].Lock(Bounds(0, 0, Self.Texture[0].Width, Self.Texture[0].Height), Bits, Pitch);
 
-  for TextureNo := 0 to Self.TextureCount - 1 do
-  begin
-    Bytes := Self.Texture[TextureNo].BytesPerPixel * Self.Texture
-      [TextureNo].Width;
+    Self.Texture[0].CopyToSurface(Bitmap.Surface);
+    Bitmap.SaveToStream(ImageStream,'.image');
+  finally
+    Self.Texture[0].Unlock();
 
-    Self.Texture[TextureNo].Lock(Bounds(0, 0, Self.Texture[TextureNo].Width,
-      Self.Texture[TextureNo].Height), Bits, Pitch);
-
-    BoolResult := (Bits <> nil) and (Pitch > 0);
-    if (not BoolResult) then
-    begin
-      ImageStream.Free;
-      Result := nil;
-      Exit;
-    end;
-
-    for Index := 0 to Self.Texture[TextureNo].Height - 1 do
-    begin
-      ImageStream.WriteBuffer(Bits^, Bytes);
-
-      Inc(PtrInt(Bits), Pitch);
-    end;
-
-    Self.Texture[TextureNo].Unlock();
+    Bitmap.Free;
   end;
+
+//  ImageStream := TMemoryStream.Create;
+//
+//  // --> Format
+//  ImageStream.PutByte(Byte(Self.PixelFormat));
+//  // --> Pattern Size
+//  ImageStream.PutWord(Self.PatternSize.x);
+//  ImageStream.PutWord(Self.PatternSize.y);
+//  // --> Pattern Count
+//  ImageStream.PutLongInt(Self.PatternCount);
+//  // --> Visible Size
+//  ImageStream.PutWord(Self.VisibleSize.x);
+//  ImageStream.PutWord(Self.VisibleSize.y);
+//  // --> Texture Size
+//  ImageStream.PutWord(Self.Texture[0].Width);
+//  ImageStream.PutWord(Self.Texture[0].Height);
+//  // --> Texture Count
+//  ImageStream.PutWord(Self.TextureCount);
+//
+//  for TextureNo := 0 to Self.TextureCount - 1 do
+//  begin
+//    Bytes := Self.Texture[TextureNo].BytesPerPixel * Self.Texture
+//      [TextureNo].Width;
+//
+//    Self.Texture[TextureNo].Lock(Bounds(0, 0, Self.Texture[TextureNo].Width,
+//      Self.Texture[TextureNo].Height), Bits, Pitch);
+//
+//    BoolResult := (Bits <> nil) and (Pitch > 0);
+//    if (not BoolResult) then
+//    begin
+//      ImageStream.Free;
+//      Result := nil;
+//      Exit;
+//    end;
+//
+//    for Index := 0 to Self.Texture[TextureNo].Height - 1 do
+//    begin
+//      ImageStream.WriteBuffer(Bits^, Bytes);
+//
+//      Inc(PtrInt(Bits), Pitch);
+//    end;
+//
+//    Self.Texture[TextureNo].Unlock();
+//  end;
 
   Result := ImageStream;
 end;
@@ -790,8 +823,8 @@ end;
 {$REGION 'TAsphyreImages'}
 { TAsphyreImagesHelper }
 
-function TAsphyreImagesHelper.InsertFromArchive(const Name: String;
-  const Archive: TAsphyreArchive; const Folder: String = foNone): Integer;
+function TAtlasImagesHelper.InsertFromArchive(const Name: String;
+  const Archive: TArchive; const Folder: String = foNone): Integer;
 var
   ImageStream: TMemoryStream;
 begin
@@ -813,17 +846,16 @@ begin
   ImageStream.Free;
 end;
 
-function TAsphyreImagesHelper.InsertFromArchiveFile(const Name,
+function TAtlasImagesHelper.InsertFromArchiveFile(const Name,
   FileName: String; const Folder: String = foNone): Integer;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
   Result := -1;
 
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomReadOnly;
+  Media.OpenMode := TArchive.TOpenMode.ReadOnly;
 
   if (Media.OpenFile(FileName)) then
   begin
@@ -833,20 +865,20 @@ begin
   Media.Free;
 end;
 
-function TAsphyreImagesHelper.InsertFromStream(const Name: String;
+function TAtlasImagesHelper.InsertFromStream(const Name: String;
   const ImageStream: TMemoryStream): Integer;
 var
-  ImageItem: TAsphyreImage;
+  ImageItem: TAtlasImage;
 begin
-  ImageItem := TAsphyreImage.Create();
+  ImageItem := TAtlasImage.Create(Self.Device);
 
   ImageItem.Name := Name;
   ImageItem.MipMapping := True;
   ImageItem.DynamicImage := False;
-  ImageItem.PixelFormat := apf_Unknown;
+  ImageItem.PixelFormat := TPixelFormat.Unknown;
 
   ImageStream.Seek(0, soFromBeginning);
-  if (not ImageItem.LoadFromStream(ImageStream)) then
+  if (not ImageItem.LoadFromStream('.image', ImageStream, TAlphaFormatRequest.DontCare)) then
   begin
     FreeAndNil(ImageItem);
     Result := -1;
@@ -856,7 +888,7 @@ begin
   Result := Self.Insert(ImageItem);
 end;
 
-function TAsphyreImagesHelper.SaveAllToArchive(const Archive: TAsphyreArchive;
+function TAtlasImagesHelper.SaveAllToArchive(const Archive: TArchive;
   const Folder: String = foNone): Boolean;
 var
   I: Integer;
@@ -868,7 +900,7 @@ begin
 
   for I := 0 to Self.ItemCount - 1 do
   begin
-    if not (Assigned(Self.Images[I])) then
+    if not (Assigned(Self.Items[I])) then
     begin
       Continue;
     end;
@@ -882,15 +914,14 @@ begin
   Result := True;
 end;
 
-function TAsphyreImagesHelper.SaveAllToArchiveFile(const FileName: String;
+function TAtlasImagesHelper.SaveAllToArchiveFile(const FileName: String;
   const Folder: String = foNone): Boolean;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomUpdate;
+  Media.OpenMode := TArchive.TOpenMode.Update;
 
   Result := Media.OpenFile(FileName);
 
@@ -902,8 +933,8 @@ begin
   Media.Free;
 end;
 
-function TAsphyreImagesHelper.SaveToArchive(const Index: Integer;
-  const Archive: TAsphyreArchive; const Folder: String = foNone): Boolean;
+function TAtlasImagesHelper.SaveToArchive(const Index: Integer;
+  const Archive: TArchive; const Folder: String = foNone): Boolean;
 begin
   Result := False;
 
@@ -918,8 +949,8 @@ begin
   Result := True;
 end;
 
-function TAsphyreImagesHelper.SaveToArchive(const Name: String;
-  const Archive: TAsphyreArchive; const Folder: String = foNone): Boolean;
+function TAtlasImagesHelper.SaveToArchive(const Name: String;
+  const Archive: TArchive; const Folder: String = foNone): Boolean;
 begin
   Result := False;
 
@@ -934,15 +965,14 @@ begin
   Result := True;
 end;
 
-function TAsphyreImagesHelper.SaveToArchiveFile(const Index: Integer;
+function TAtlasImagesHelper.SaveToArchiveFile(const Index: Integer;
   const FileName: String; const Folder: String = foNone): Boolean;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomUpdate;
+  Media.OpenMode := TArchive.TOpenMode.Update;
 
   Result := Media.OpenFile(FileName);
 
@@ -954,15 +984,14 @@ begin
   Media.Free;
 end;
 
-function TAsphyreImagesHelper.SaveToArchiveFile(const Name, FileName: String;
+function TAtlasImagesHelper.SaveToArchiveFile(const Name, FileName: String;
   const Folder: String = foNone): Boolean;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomUpdate;
+  Media.OpenMode := TArchive.TOpenMode.Update;
 
   Result := Media.OpenFile(FileName);
 

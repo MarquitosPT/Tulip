@@ -58,6 +58,8 @@ interface
 
 uses
   System.SysUtils, System.Classes,
+  // PXL Units
+  PXL.Canvas,
   // Tulip UI Units
   Tulip.UI.Types, Tulip.UI.Controls, Tulip.UI.Forms;
 
@@ -202,7 +204,10 @@ procedure TCustomAPaintBox.Paint;
 begin
   if Assigned(FOnPaint) then
   begin
-    ControlManager.Canvas.Antialias := FAntialiased;
+    if FAntialiased then
+      Include(ControlManager.Canvas.Attributes, Antialias)
+    else
+      Exclude(ControlManager.Canvas.Attributes, Antialias);
     FOnPaint(Self);
   end;
 end;

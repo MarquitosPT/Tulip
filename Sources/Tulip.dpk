@@ -1,0 +1,53 @@
+package Tulip;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  Tulip.UI.Buttons in 'Tulip.UI.Buttons.pas',
+  Tulip.UI.CheckBoxes in 'Tulip.UI.CheckBoxes.pas',
+  Tulip.UI.Classes in 'Tulip.UI.Classes.pas',
+  Tulip.UI.Controls in 'Tulip.UI.Controls.pas',
+  Tulip.UI.EditBoxes in 'Tulip.UI.EditBoxes.pas',
+  Tulip.UI.Forms in 'Tulip.UI.Forms.pas',
+  Tulip.UI.Helpers in 'Tulip.UI.Helpers.pas',
+  Tulip.UI.Images in 'Tulip.UI.Images.pas',
+  Tulip.UI.Labels in 'Tulip.UI.Labels.pas',
+  Tulip.UI.ListBoxes in 'Tulip.UI.ListBoxes.pas',
+  Tulip.UI.PaintBoxes in 'Tulip.UI.PaintBoxes.pas',
+  Tulip.UI.Panels in 'Tulip.UI.Panels.pas',
+  Tulip.UI in 'Tulip.UI.pas',
+  Tulip.UI.ProgressBars in 'Tulip.UI.ProgressBars.pas',
+  Tulip.UI.RadioButtons in 'Tulip.UI.RadioButtons.pas',
+  Tulip.UI.TrackBars in 'Tulip.UI.TrackBars.pas',
+  Tulip.UI.Types in 'Tulip.UI.Types.pas',
+  Tulip.UI.Utils in 'Tulip.UI.Utils.pas';
+
+end.

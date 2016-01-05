@@ -58,16 +58,17 @@ interface
 
 uses
   System.Classes,
-  // Asphyre
-  StreamUtils, SystemSurfaces, AsphyreTypes, AsphyreConv, AsphyreBitmaps,
-  AsphyrePNG, AsphyreJPG, AsphyreBMP,
+  // PXL units
+  PXL.Bitmaps,
+  PXL.ImageFormats,
+  PXL.Types,
   // Tulip UI Units
   Tulip.UI.Classes;
 {$REGION 'Colors'}
-function cAlpha4(c: TFillColor): TColor4; overload;
-function cColor2(c: TTextColor): TColor2; overload;
-function cColor4(c: TFillColor): TColor4; overload;
-function cColor4(c: TTextColor): TColor4; overload;
+function cAlpha4(c: TFillColor): TIntColor4; overload;
+function cColor2(c: TTextColor): TIntColor2; overload;
+function cColor4(c: TFillColor): TIntColor4; overload;
+function cColor4(c: TTextColor): TIntColor4; overload;
 {$ENDREGION}
 {$REGION 'Lists'}
 procedure ListAdd(var List: TList; Item: Pointer);
@@ -82,34 +83,38 @@ function ImageFileToStream(FileName: String;
 implementation
 
 {$REGION 'Colors'}
-function cAlpha4(c: TFillColor): TColor4;
+function cAlpha4(c: TFillColor): TIntColor4;
 begin
-  Result[0] := cAlpha1(cGetAlpha1(c.TopLeft));
-  Result[1] := cAlpha1(cGetAlpha1(c.TopRight));
-  Result[2] := cAlpha1(cGetAlpha1(c.BottomRight));
-  Result[3] := cAlpha1(cGetAlpha1(c.BottomLeft));
+//  Result[0] := cAlpha1(cGetAlpha1(c.TopLeft));
+//  Result[1] := cAlpha1(cGetAlpha1(c.TopRight));
+//  Result[2] := cAlpha1(cGetAlpha1(c.BottomRight));
+//  Result[3] := cAlpha1(cGetAlpha1(c.BottomLeft));
+  Result.Values[0] := IntColorAlpha(c.TopLeft);
+  Result.Values[1] := IntColorAlpha(c.TopRight);
+  Result.Values[2] := IntColorAlpha(c.BottomRight);
+  Result.Values[3] := IntColorAlpha(c.BottomLeft);
 end;
 
-function cColor2(c: TTextColor): TColor2;
+function cColor2(c: TTextColor): TIntColor2;
 begin
-  Result[0] := c.Top;
-  Result[1] := c.Bottom;
+  Result.Values[0] := c.Top;
+  Result.Values[1] := c.Bottom;
 end;
 
-function cColor4(c: TFillColor): TColor4;
+function cColor4(c: TFillColor): TIntColor4;
 begin
-  Result[0] := c.TopLeft;
-  Result[1] := c.TopRight;
-  Result[2] := c.BottomRight;
-  Result[3] := c.BottomLeft;
+  Result.Values[0] := c.TopLeft;
+  Result.Values[1] := c.TopRight;
+  Result.Values[2] := c.BottomRight;
+  Result.Values[3] := c.BottomLeft;
 end;
 
-function cColor4(c: TTextColor): TColor4;
+function cColor4(c: TTextColor): TIntColor4;
 begin
-  Result[0] := c.Top;
-  Result[1] := c.Top;
-  Result[2] := c.Bottom;
-  Result[3] := c.Bottom;
+  Result.Values[0] := c.Top;
+  Result.Values[1] := c.Top;
+  Result.Values[2] := c.Bottom;
+  Result.Values[3] := c.Bottom;
 end;
 {$ENDREGION}
 {$REGION 'Lists'}
@@ -161,60 +166,60 @@ function ImageFileToStream(FileName: String;
 var
   AuxMem: Pointer;
   AuxSize: Integer;
-  Image: TSystemSurface;
+  //Image: TSystemSurface;
   Index: Integer;
 begin
-  Image := TSystemSurface.Create;
-
-  Result := BitmapManager.LoadFromFile(FileName, Image);
-
-  if not Result then
-  begin
-    Image.Free;
-    Exit;
-  end;
-
-  // --> Format
-  StreamPutByte(AStream, Byte(apf_A8R8G8B8));
-  // --> Pattern Size
-  StreamPutWord(AStream, Image.Width);
-  StreamPutWord(AStream, Image.Height);
-  // --> Pattern Count
-  StreamPutLongInt(AStream, 1);
-  // --> Visible Size
-  StreamPutWord(AStream, Image.Width);
-  StreamPutWord(AStream, Image.Height);
-  // --> Texture Size
-  StreamPutWord(AStream, Image.Width);
-  StreamPutWord(AStream, Image.Height);
-  // --> Texture Count
-  StreamPutWord(AStream, 1);
-
-  // Allocate auxiliary memory for pixel conversion.
-  AuxSize := (Image.Width * AsphyrePixelFormatBits[apf_A8R8G8B8]) div 8;
-  AuxMem := AllocMem(AuxSize);
-
-  // Convert pixel data and write it to the stream.
-  try
-    for Index := 0 to Image.Height - 1 do
-    begin
-      Pixel32toXArray(Image.ScanLine[Index], AuxMem, apf_A8R8G8B8, Image.Width);
-      AStream.WriteBuffer(AuxMem^, AuxSize);
-    end;
-  except
-    FreeMem(AuxMem);
-    Image.Free;
-
-    Result := False;
-    Exit;
-  end;
-
-  // Release auxiliary memory.
-  FreeMem(AuxMem);
-  Image.Free;
-
-  // position to the beginning of our stream
-  AStream.Seek(0, soFromBeginning);
+//  Image := TSystemSurface.Create;
+//
+//  Result := BitmapManager.LoadFromFile(FileName, Image);
+//
+//  if not Result then
+//  begin
+//    Image.Free;
+//    Exit;
+//  end;
+//
+//  // --> Format
+//  StreamPutByte(AStream, Byte(apf_A8R8G8B8));
+//  // --> Pattern Size
+//  StreamPutWord(AStream, Image.Width);
+//  StreamPutWord(AStream, Image.Height);
+//  // --> Pattern Count
+//  StreamPutLongInt(AStream, 1);
+//  // --> Visible Size
+//  StreamPutWord(AStream, Image.Width);
+//  StreamPutWord(AStream, Image.Height);
+//  // --> Texture Size
+//  StreamPutWord(AStream, Image.Width);
+//  StreamPutWord(AStream, Image.Height);
+//  // --> Texture Count
+//  StreamPutWord(AStream, 1);
+//
+//  // Allocate auxiliary memory for pixel conversion.
+//  AuxSize := (Image.Width * AsphyrePixelFormatBits[apf_A8R8G8B8]) div 8;
+//  AuxMem := AllocMem(AuxSize);
+//
+//  // Convert pixel data and write it to the stream.
+//  try
+//    for Index := 0 to Image.Height - 1 do
+//    begin
+//      Pixel32toXArray(Image.ScanLine[Index], AuxMem, apf_A8R8G8B8, Image.Width);
+//      AStream.WriteBuffer(AuxMem^, AuxSize);
+//    end;
+//  except
+//    FreeMem(AuxMem);
+//    Image.Free;
+//
+//    Result := False;
+//    Exit;
+//  end;
+//
+//  // Release auxiliary memory.
+//  FreeMem(AuxMem);
+//  Image.Free;
+//
+//  // position to the beginning of our stream
+//  AStream.Seek(0, soFromBeginning);
 
   Result := True;
 end;

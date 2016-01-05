@@ -58,8 +58,11 @@ interface
 
 uses
   System.SysUtils, System.Types, System.Classes,
-  // Aspryre units
-  AsphyreTypes, AbstractCanvas, AsphyreFonts, AsphyreImages, Vectors2,
+  // PXL Units
+  PXL.Canvas,
+  PXL.Images,
+  PXL.Fonts,
+  PXL.Types,
   // Tulip UI Units
   Tulip.UI.Classes, Tulip.UI.Types, Tulip.UI.Utils, Tulip.UI.Controls,
   Tulip.UI.Forms, Tulip.UI.Helpers;
@@ -376,7 +379,7 @@ end;
 procedure TCustomATrackBar.Paint;
 var
   X, Y: Integer;
-  AImage: TAsphyreImage;
+  AImage: TAtlasImage;
   bTop, bBottom: TConstraintSize;
   L, T, H, W, Pos, BtL, BtW: Integer;
   BtBorderColor: TAColor;
@@ -387,7 +390,10 @@ begin
   X := ClientLeft;
   Y := ClientTop;
 
-  ControlManager.Canvas.Antialias := FAntialiased;
+  if FAntialiased then
+    Include(ControlManager.Canvas.Attributes, Antialias)
+  else
+    Exclude(ControlManager.Canvas.Attributes, Antialias);
 
   // Draw Background
   if not FTransparent then
@@ -395,14 +401,14 @@ begin
     AImage := ControlManager.Images.Image[FImage.Image];
     if AImage <> nil then
     begin
-      ControlManager.Canvas.UseImagePx(AImage, pRect4(FImage.Rect));
-      ControlManager.Canvas.TexMap(pRect4(Rect(X, Y, X + Width, Y + Height)),
-        cAlpha4(FColor), beNormal);
+      ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImage.Rect));
+      ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
+        cAlpha4(FColor), Normal);
     end
     else
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Height),
-        cColor4(FColor), beNormal);
+        cColor4(FColor), Normal);
     end;
   end;
 
@@ -415,36 +421,36 @@ begin
     if eTop in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Border.Size),
-        Border.Color, beNormal);
+        Border.Color, Normal);
       bTop := Border.Size;
     end;
 
     if eBottom in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y + Height - Border.Size,
-        X + Width, Y + Height), Border.Color, beNormal);
+        X + Width, Y + Height), Border.Color, Normal);
       bBottom := Border.Size;
     end;
 
     if eLeft in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X, Y + bTop, X + Border.Size,
-        Y + Height - bBottom), Border.Color, beNormal);
+        Y + Height - bBottom), Border.Color, Normal);
 
     if eRight in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X + Width - Border.Size, Y + bTop,
-        X + Width, Y + Height - bBottom), Border.Color, beNormal);
+        X + Width, Y + Height - bBottom), Border.Color, Normal);
   end;
 
   // Draw Focus rect
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fLight) then
   begin
     ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($40FFFFFF), beNormal);
+      Y + Height + 1), cColor4($40FFFFFF), Normal);
   end;
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fDark) then
   begin
     ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($30000000), beNormal);
+      Y + Height + 1), cColor4($30000000), Normal);
   end;
 
   // Draw button
@@ -482,18 +488,18 @@ begin
   AImage := ControlManager.Images.Image[BtImage.Image];
   if AImage <> nil then
   begin
-    ControlManager.Canvas.UseImagePx(AImage, pRect4(BtImage.Rect));
-    ControlManager.Canvas.TexMap(pRect4(Rect(BtL, T, BtW, H)), cAlpha4(BtColor),
-      beNormal);
+    ControlManager.Canvas.UseImagePx(AImage, FloatRect4(BtImage.Rect));
+    ControlManager.Canvas.TexQuad(FloatRect4(Rect(BtL, T, BtW, H)), cAlpha4(BtColor),
+      Normal);
   end
   else
   begin
     // Draw shadow scroll area
     ControlManager.Canvas.FillRect(Rect(L, T + (FButton.Height div 2) - 1,
-      L + W, H - (FButton.Height div 2) + 1), cColor4($20000000), beNormal);
+      L + W, H - (FButton.Height div 2) + 1), cColor4($20000000), Normal);
 
     ControlManager.Canvas.FillRect(Rect(BtL, T, BtW, H), cColor4(BtColor),
-      beNormal);
+      Normal);
   end;
 
   // Draw Button Border
@@ -505,24 +511,24 @@ begin
     if eTop in FButton.Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(BtL, T, BtW, T + FButton.Border.Size),
-        BtBorderColor, beNormal);
+        BtBorderColor, Normal);
       bTop := FButton.Border.Size;
     end;
 
     if eBottom in FButton.Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(BtL, H - FButton.Border.Size, BtW, H),
-        BtBorderColor, beNormal);
+        BtBorderColor, Normal);
       bBottom := FButton.Border.Size;
     end;
 
     if eLeft in FButton.Border.Edges then
       ControlManager.Canvas.FillRect(Rect(BtL, T + bTop,
-        BtL + FButton.Border.Size, H - bBottom), BtBorderColor, beNormal);
+        BtL + FButton.Border.Size, H - bBottom), BtBorderColor, Normal);
 
     if eRight in FButton.Border.Edges then
       ControlManager.Canvas.FillRect(Rect(BtW - FButton.Border.Size, T + bTop,
-        BtW, H - bBottom), BtBorderColor, beNormal);
+        BtW, H - bBottom), BtBorderColor, Normal);
   end;
 
 end;

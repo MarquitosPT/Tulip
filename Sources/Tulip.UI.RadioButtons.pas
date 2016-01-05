@@ -58,8 +58,11 @@ interface
 
 uses
   System.SysUtils, System.Classes,
-  // Asphyre Units
-  AbstractCanvas, AsphyreFonts, AsphyreImages, AsphyreTypes, Vectors2,
+  // PXL Units
+  PXL.Canvas,
+  PXL.Images,
+  PXL.Fonts,
+  PXL.Types,
   // Tulip UI Units
   Tulip.UI.Types, Tulip.UI.Classes, Tulip.UI.Controls, Tulip.UI.Helpers,
   Tulip.UI.Utils;
@@ -309,8 +312,8 @@ end;
 procedure TCustomARadioButton.Paint;
 var
   X, Y: Integer;
-  AFont: TAsphyreFont;
-  AImage: TAsphyreImage;
+  AFont: TBitmapFont;
+  AImage: TAtlasImage;
   bTop, bBottom: TConstraintSize;
   L, T, H, W: Integer;
 begin
@@ -318,7 +321,10 @@ begin
   X := ClientLeft;
   Y := ClientTop;
 
-  ControlManager.Canvas.Antialias := FAntialiased;
+  if FAntialiased then
+    Include(ControlManager.Canvas.Attributes, Antialias)
+  else
+    Exclude(ControlManager.Canvas.Attributes, Antialias);
 
   // Draw Background
   if not FTransparent then
@@ -326,14 +332,14 @@ begin
     AImage := ControlManager.Images.Image[FImage.Image];
     if AImage <> nil then
     begin
-      ControlManager.Canvas.UseImagePx(AImage, pRect4(FImage.Rect));
-      ControlManager.Canvas.TexMap(pRect4(Rect(X, Y, X + Width, Y + Height)),
-        cAlpha4(FColor), beNormal);
+      ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImage.Rect));
+      ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
+        cAlpha4(FColor), Normal);
     end
     else
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Height),
-        cColor4(FColor), beNormal);
+        cColor4(FColor), Normal);
     end;
   end;
 
@@ -346,24 +352,24 @@ begin
     if eTop in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Border.Size),
-        Border.Color, beNormal);
+        Border.Color, Normal);
       bTop := Border.Size;
     end;
 
     if eBottom in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y + Height - Border.Size,
-        X + Width, Y + Height), Border.Color, beNormal);
+        X + Width, Y + Height), Border.Color, Normal);
       bBottom := Border.Size;
     end;
 
     if eLeft in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X, Y + bTop, X + Border.Size,
-        Y + Height - bBottom), Border.Color, beNormal);
+        Y + Height - bBottom), Border.Color, Normal);
 
     if eRight in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X + Width - Border.Size, Y + bTop,
-        X + Width, Y + Height - bBottom), Border.Color, beNormal);
+        X + Width, Y + Height - bBottom), Border.Color, Normal);
   end;
 
   // Draw DisplayText
@@ -395,23 +401,23 @@ begin
   if AImage <> nil then
   begin
     if FChecked then
-      ControlManager.Canvas.UseImagePx(AImage, pRect4(FBox.CheckedImage.Rect))
+      ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FBox.CheckedImage.Rect))
     else
-      ControlManager.Canvas.UseImagePx(AImage, pRect4(FBox.Image.Rect));
+      ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FBox.Image.Rect));
 
-    ControlManager.Canvas.TexMap(pRect4(Rect(L, T, W, H)), cAlpha4(FColor),
-      beNormal);
+    ControlManager.Canvas.TexQuad(FloatRect4(Rect(L, T, W, H)), cAlpha4(FColor),
+      Normal);
   end
   else
   begin
     ControlManager.Canvas.FillRect(Rect(L, T, W, H), cColor4(FBox.Color),
-      beNormal);
+      Normal);
     // draw check
     if FChecked then
     begin
       ControlManager.Canvas.FillRect(Rect(L + (FBox.Size div 4),
         T + (FBox.Size div 4), W - (FBox.Size div 4), H - (FBox.Size div 4)),
-        cColor4(FBox.CheckedColor), beNormal);
+        cColor4(FBox.CheckedColor), Normal);
     end;
   end;
 
@@ -424,36 +430,36 @@ begin
     if eTop in FBox.Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(L, T, W, T + FBox.Border.Size),
-        FBox.Border.Color, beNormal);
+        FBox.Border.Color, Normal);
       bTop := FBox.Border.Size;
     end;
 
     if eBottom in FBox.Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(L, H - FBox.Border.Size, W, H),
-        FBox.Border.Color, beNormal);
+        FBox.Border.Color, Normal);
       bBottom := FBox.Border.Size;
     end;
 
     if eLeft in FBox.Border.Edges then
       ControlManager.Canvas.FillRect(Rect(L, T + bTop, L + FBox.Border.Size,
-        H - bBottom), FBox.Border.Color, beNormal);
+        H - bBottom), FBox.Border.Color, Normal);
 
     if eRight in FBox.Border.Edges then
       ControlManager.Canvas.FillRect(Rect(W - FBox.Border.Size, T + bTop, W,
-        H - bBottom), FBox.Border.Color, beNormal);
+        H - bBottom), FBox.Border.Color, Normal);
   end;
 
   // Draw box Focus rect
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fLight) then
   begin
     ControlManager.Canvas.FrameRect(Rect(L - 1, T - 1, W + 1, H + 1),
-      cColor4($40FFFFFF), beNormal);
+      cColor4($40FFFFFF), Normal);
   end;
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fDark) then
   begin
     ControlManager.Canvas.FrameRect(Rect(L - 1, T - 1, W + 1, H + 1),
-      cColor4($30000000), beNormal);
+      cColor4($30000000), Normal);
   end;
 
 end;

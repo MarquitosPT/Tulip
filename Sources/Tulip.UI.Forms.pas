@@ -58,9 +58,11 @@ interface
 
 uses
   System.SysUtils, System.Types, System.Classes,
-  // Aspryre units
-  AsphyreTypes, AbstractCanvas, AsphyreFonts, AsphyreImages, AsphyreUtils,
-  Vectors2,
+  // PXL unit
+  PXL.Canvas,
+  PXL.Fonts,
+  PXL.Images,
+  PXL.Types,
   // Tulip UI units
   Tulip.UI.Types, Tulip.UI.Classes, Tulip.UI.Controls, Tulip.UI.Utils,
   Tulip.UI.Helpers;
@@ -266,8 +268,8 @@ end;
 procedure TCustomAForm.Paint;
 var
   X, Y: Integer;
-  AFont: TAsphyreFont;
-  AImage: TAsphyreImage;
+  AFont: TBitmapFont;
+  AImage: TAtlasImage;
   bTop, bBottom: TConstraintSize;
   I: Integer;
   ARect: TRect;
@@ -281,7 +283,10 @@ begin
   X := ClientLeft;
   Y := ClientTop;
 
-  ControlManager.Canvas.Antialias := FAntialiased;
+  if FAntialiased then
+    Include(ControlManager.Canvas.Attributes, Antialias)
+  else
+    Exclude(ControlManager.Canvas.Attributes, Antialias);
 
   if FShadow then
   begin
@@ -290,7 +295,7 @@ begin
     while I > 5 do
     begin
       ControlManager.Canvas.FillRect(Rect(X - I, Y - I, X + Width + I,
-        Y + Height + I), cAlpha4(1), beShadow);
+        Y + Height + I), cAlpha4(1), Shadow);
       Dec(I, 2);
     end;
 
@@ -298,7 +303,7 @@ begin
     while I > 3 do
     begin
       ControlManager.Canvas.FillRect(Rect(X - I, Y - I, X + Width + I,
-        Y + Height + I), cAlpha4(2), beShadow);
+        Y + Height + I), cAlpha4(2), Shadow);
       Dec(I, 1);
     end;
 
@@ -306,7 +311,7 @@ begin
     while I > 0 do
     begin
       ControlManager.Canvas.FillRect(Rect(X - I, Y - I, X + Width + I,
-        Y + Height + I), cAlpha4(4), beShadow);
+        Y + Height + I), cAlpha4(4), Shadow);
       Dec(I, 1);
     end;
   end;
@@ -315,14 +320,14 @@ begin
   AImage := ControlManager.Images.Image[FImage.Image];
   if AImage <> nil then
   begin
-    ControlManager.Canvas.UseImagePx(AImage, pRect4(FImage.Rect));
-    ControlManager.Canvas.TexMap(pRect4(Rect(X, Y, X + Width, Y + Height)),
-      cAlpha4(FColor), beNormal);
+    ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImage.Rect));
+    ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
+      cAlpha4(FColor), Normal);
   end
   else
   begin
     ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Height),
-      cColor4(FColor), beNormal);
+      cColor4(FColor), Normal);
   end;
 
   // Draw Border
@@ -334,24 +339,24 @@ begin
     if eTop in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Border.Size),
-        Border.Color, beNormal);
+        Border.Color, Normal);
       bTop := Border.Size;
     end;
 
     if eBottom in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y + Height - Border.Size,
-        X + Width, Y + Height), Border.Color, beNormal);
+        X + Width, Y + Height), Border.Color, Normal);
       bBottom := Border.Size;
     end;
 
     if eLeft in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X, Y + bTop, X + Border.Size,
-        Y + Height - bBottom), Border.Color, beNormal);
+        Y + Height - bBottom), Border.Color, Normal);
 
     if eRight in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X + Width - Border.Size, Y + bTop,
-        X + Width, Y + Height - bBottom), Border.Color, beNormal);
+        X + Width, Y + Height - bBottom), Border.Color, Normal);
   end;
 
   // Draw DisplayText
@@ -376,15 +381,15 @@ begin
 
       // Set Rect Canvas
       ControlManager.Canvas.ClipRect :=
-        ShortRect(Rect(X - 1, Y, X + AWidth, Y + AHeight), ARect);
+        IntRect(Rect(X - 1, Y, X + AWidth, Y + AHeight), ARect);
 
       case Self.FFont.VerticalAlign of
         aTop:
           vTop := Y;
         aMiddle:
-          vTop := Y + (AHeight div 2) - (AFont.TexHeight(FCaption) div 2);
+          vTop := Y + (AHeight div 2) - (AFont.TextHeight(FCaption) div 2);
         aBottom:
-          vTop := Y + AHeight - AFont.TexHeight(FCaption);
+          vTop := Y + AHeight - AFont.TextHeight(FCaption);
         else
           vTop := X;
       end;
@@ -401,7 +406,7 @@ begin
           vLeft := X;
       end;
 
-      AFont.TextOut(Point2(vLeft, vTop),FCaption, cColor2(FFont.Color), 1.0);
+      AFont.DrawText(Point2(vLeft, vTop),FCaption, cColor2(FFont.Color), 1.0);
 
       // Restore Rect Canvas
       ControlManager.Canvas.ClipRect := ARect;

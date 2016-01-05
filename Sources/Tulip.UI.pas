@@ -59,8 +59,10 @@ interface
 uses
   Winapi.Messages, System.Types, System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.Clipbrd,
-  // Asphyre Units
-  AbstractDevices, AbstractCanvas,
+  // PXL Units
+  PXL.Devices,
+  PXL.Canvas,
+  PXL.SwapChains,
   // Tulip UI Units
   Tulip.UI.Controls, Tulip.UI.Forms, Tulip.UI.Images, Tulip.UI.Labels,
   Tulip.UI.Panels, Tulip.UI.Buttons, Tulip.UI.EditBoxes,
@@ -732,15 +734,15 @@ var
   Control: TAControl;
 begin
   // fixes coordinates when scaled
-  if (Self.Parent is TControl) then
+  if (Self.Parent is TControl) and (Device is TCustomSwapChainDevice) then
   begin
-    if Self.Device.SwapChains.Items[0].Width <> TControl(Self.Parent).ClientWidth
+    if TCustomSwapChainDevice(Device).SwapChains.Items[0].Width <> TControl(Self.Parent).ClientWidth
     then
-      X := Trunc(X * (Self.Device.SwapChains.Items[0].Width /
+      X := Trunc(X * (TCustomSwapChainDevice(Device).SwapChains.Items[0].Width /
         TControl(Self.Parent).ClientWidth));
-    if Self.Device.SwapChains.Items[0].Height <> TControl(Self.Parent).ClientHeight
+    if TCustomSwapChainDevice(Device).SwapChains.Items[0].Height <> TControl(Self.Parent).ClientHeight
     then
-      Y := Trunc(Y * (Self.Device.SwapChains.Items[0].Height /
+      Y := Trunc(Y * (TCustomSwapChainDevice(Device).SwapChains.Items[0].Height /
         TControl(Self.Parent).ClientHeight));
   end;
 
@@ -822,15 +824,15 @@ var
   Control: TAControl;
 begin
   // fixes coordinates when scaled
-  if (Self.Parent is TControl) then
+  if (Self.Parent is TControl) and (Device is TCustomSwapChainDevice) then
   begin
-    if Self.Device.SwapChains.Items[0].Width <> TControl(Self.Parent).ClientWidth
+    if TCustomSwapChainDevice(Device).SwapChains.Items[0].Width <> TControl(Self.Parent).ClientWidth
     then
-      X := Trunc(X * (Self.Device.SwapChains.Items[0].Width /
+      X := Trunc(X * (TCustomSwapChainDevice(Device).SwapChains.Items[0].Width /
         TControl(Self.Parent).ClientWidth));
-    if Self.Device.SwapChains.Items[0].Height <> TControl(Self.Parent).ClientHeight
+    if TCustomSwapChainDevice(Device).SwapChains.Items[0].Height <> TControl(Self.Parent).ClientHeight
     then
-      Y := Trunc(Y * (Self.Device.SwapChains.Items[0].Height /
+      Y := Trunc(Y * (TCustomSwapChainDevice(Device).SwapChains.Items[0].Height /
         TControl(Self.Parent).ClientHeight));
   end;
 
@@ -919,15 +921,15 @@ var
   Control: TAControl;
 begin
   // fixes coordinates when scaled
-  if (Self.Parent is TControl) then
+  if (Self.Parent is TControl) and (Device is TCustomSwapChainDevice) then
   begin
-    if Self.Device.SwapChains.Items[0].Width <> TControl(Self.Parent).ClientWidth
+    if TCustomSwapChainDevice(Device).SwapChains.Items[0].Width <> TControl(Self.Parent).ClientWidth
     then
-      X := Trunc(X * (Self.Device.SwapChains.Items[0].Width /
+      X := Trunc(X * (TCustomSwapChainDevice(Device).SwapChains.Items[0].Width /
         TControl(Self.Parent).ClientWidth));
-    if Self.Device.SwapChains.Items[0].Height <> TControl(Self.Parent).ClientHeight
+    if TCustomSwapChainDevice(Device).SwapChains.Items[0].Height <> TControl(Self.Parent).ClientHeight
     then
-      Y := Trunc(Y * (Self.Device.SwapChains.Items[0].Height /
+      Y := Trunc(Y * (TCustomSwapChainDevice(Device).SwapChains.Items[0].Height /
         TControl(Self.Parent).ClientHeight));
   end;
 

@@ -58,8 +58,11 @@ interface
 
 uses
   System.SysUtils, System.Types, System.Classes,
-  // Asphyre Units
-  AbstractCanvas, AsphyreFonts, AsphyreImages, AsphyreTypes, Vectors2,
+  // PXL Units
+  PXL.Canvas,
+  PXL.Fonts,
+  PXL.Images,
+  PXL.Types,
   // Tulip UI Units
   Tulip.UI.Types, Tulip.UI.Classes, Tulip.UI.Controls, Tulip.UI.Helpers,
   Tulip.UI.Utils;
@@ -292,8 +295,8 @@ end;
 procedure TCustomAButton.Paint;
 var
   X, Y: Integer;
-  AFont: TAsphyreFont;
-  AImage: TAsphyreImage;
+  AFont: TBitmapFont;
+  AImage: TAtlasImage;
   AColor: TFillColor;
   ABorderColor: TAColor;
   AFontColor: TTextColor;
@@ -303,7 +306,10 @@ begin
   X := ClientLeft;
   Y := ClientTop;
 
-  ControlManager.Canvas.Antialias := FAntialiased;
+//  if FAntialiased then
+//    Include(ControlManager.Canvas.Attributes, Antialias)
+//  else
+//    Exclude(ControlManager.Canvas.Attributes, Antialias);
 
   // Draw Background
   if not FTransparent then
@@ -329,28 +335,28 @@ begin
     begin
       if csClicked in ControlState then
       begin
-        ControlManager.Canvas.UseImagePx(AImage, pRect4(FImagePressed.Rect));
-        ControlManager.Canvas.TexMap(pRect4(Rect(X, Y, X + Width, Y + Height)),
-          cAlpha4(AColor), beNormal);
+        ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImagePressed.Rect));
+        ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
+          cAlpha4(AColor), TBlendingEffect.Normal);
       end
       else if csMouseHover in ControlState then
       begin
-        ControlManager.Canvas.UseImagePx(AImage, pRect4(FImageHover.Rect));
-        ControlManager.Canvas.TexMap(pRect4(Rect(X, Y, X + Width, Y + Height)),
-          cAlpha4(AColor), beNormal);
+        ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImageHover.Rect));
+        ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
+          cAlpha4(AColor), TBlendingEffect.Normal);
       end
       else
       begin
-        ControlManager.Canvas.UseImagePx(AImage, pRect4(FImage.Rect));
-        ControlManager.Canvas.TexMap(pRect4(Rect(X, Y, X + Width, Y + Height)),
-          cAlpha4(AColor), beNormal);
+        ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImage.Rect));
+        ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
+          cAlpha4(AColor), TBlendingEffect.Normal);
       end;
 
     end
     else
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Height),
-        cColor4(AColor), beNormal);
+        cColor4(AColor), TBlendingEffect.Normal);
     end;
   end;
 
@@ -377,24 +383,24 @@ begin
     if eTop in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Border.Size),
-        ABorderColor, beNormal);
+        ABorderColor, TBlendingEffect.Normal);
       bTop := Border.Size;
     end;
 
     if eBottom in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y + Height - Border.Size,
-        X + Width, Y + Height), ABorderColor, beNormal);
+        X + Width, Y + Height), ABorderColor, TBlendingEffect.Normal);
       bBottom := Border.Size;
     end;
 
     if eLeft in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X, Y + bTop, X + Border.Size,
-        Y + Height - bBottom), ABorderColor, beNormal);
+        Y + Height - bBottom), ABorderColor, TBlendingEffect.Normal);
 
     if eRight in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X + Width - Border.Size, Y + bTop,
-        X + Width, Y + Height - bBottom), ABorderColor, beNormal);
+        X + Width, Y + Height - bBottom), ABorderColor, TBlendingEffect.Normal);
   end;
 
   // Draw DisplayText
@@ -425,21 +431,21 @@ begin
   if (Shadow = True) then
   begin
     ControlManager.Canvas.FillRect(Rect(X + Width, Y + 1, X + Width + 1,
-      Y + Height), cColor4($40000000), beShadow);
+      Y + Height), cColor4($40000000), TBlendingEffect.Shadow);
     ControlManager.Canvas.FillRect(Rect(X + 1, Y + Height, X + Width + 1,
-      Y + Height + 1), cColor4($40000000), beShadow);
+      Y + Height + 1), cColor4($40000000), TBlendingEffect.Shadow);
   end;
 
   // Draw Focus rect
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fLight) then
   begin
     ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($40FFFFFF), beNormal);
+      Y + Height + 1), cColor4($40FFFFFF), TBlendingEffect.Normal);
   end;
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fDark) then
   begin
     ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($30000000), beNormal);
+      Y + Height + 1), cColor4($30000000), TBlendingEffect.Normal);
   end;
 
 end;

@@ -58,9 +58,11 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Math,
-  // Asphyre Units
-  AbstractCanvas, AsphyreFonts, AsphyreImages, AsphyreTypes, AsphyreUtils,
-  Vectors2,
+  // PXL units
+  PXL.Canvas,
+  PXL.Fonts,
+  PXL.Images,
+  PXL.Types,
   // Tulip UI Units
   Tulip.UI.Types, Tulip.UI.Classes, Tulip.UI.Controls, Tulip.UI.Helpers,
   Tulip.UI.Utils;
@@ -547,7 +549,7 @@ procedure TCustomAEditBox.MouseDown(Button: TMouseButton; Shift: TShiftState;
 var
   Index, XPos, AVirtualCursor: Integer;
   AChars: TAChars;
-  AFont: TAsphyreFont;
+  AFont: TBitmapFont;
 begin
   Self.SetFocus;
 
@@ -565,8 +567,7 @@ begin
     while Index < Length(Text) do
     begin
       AChars[Index].Char := Text[Index + 1];
-      AChars[Index].Width := Round(AFont.TextWidth(Text[Index + 1]) +
-        AFont.Kerning);
+      AChars[Index].Width := Round(AFont.TextWidth(Text[Index + 1]) (*+ AFont.Kerning*));
       Inc(Index);
     end;
 
@@ -627,7 +628,7 @@ procedure TCustomAEditBox.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   Index, XPos, AVirtualCursor: Integer;
   AChars: TAChars;
-  AFont: TAsphyreFont;
+  AFont: TBitmapFont;
 begin
   AFont := ControlManager.Fonts.Font[FFont.Name];
 
@@ -639,8 +640,7 @@ begin
     while Index < Length(Text) do
     begin
       AChars[Index].Char := Text[Index + 1];
-      AChars[Index].Width := Round(AFont.TextWidth(Text[Index + 1]) +
-        AFont.Kerning);
+      AChars[Index].Width := Round(AFont.TextWidth(Text[Index + 1]) (*+ AFont.Kerning*));
       Inc(Index);
     end;
 
@@ -682,8 +682,8 @@ var
   AChars: TAChars;
   ARect: TRect;
   bTop, bBottom: TConstraintSize;
-  AImage: TAsphyreImage;
-  AFont: TAsphyreFont;
+  AImage: TAtlasImage;
+  AFont: TBitmapFont;
 begin
   // Get size Canvas
   ARect := ControlManager.Canvas.ClipRect;
@@ -692,20 +692,23 @@ begin
   X := ClientLeft;
   Y := ClientTop;
 
-  ControlManager.Canvas.Antialias := FAntialiased;
+  if FAntialiased then
+    Include(ControlManager.Canvas.Attributes, Antialias)
+  else
+    Exclude(ControlManager.Canvas.Attributes, Antialias);
 
   // Draw Background
   AImage := ControlManager.Images.Image[FImage.Image];
   if AImage <> nil then
   begin
-    ControlManager.Canvas.UseImagePx(AImage, pRect4(FImage.Rect));
-    ControlManager.Canvas.TexMap(pRect4(Rect(X, Y, X + Width, Y + Height)),
-      cAlpha4(FColor), beNormal);
+    ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImage.Rect));
+    ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
+      cAlpha4(FColor), Normal);
   end
   else
   begin
     ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Height),
-      cColor4(FColor), beNormal);
+      cColor4(FColor), Normal);
   end;
 
   // Draw Border
@@ -717,24 +720,24 @@ begin
     if eTop in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Border.Size),
-        Border.Color, beNormal);
+        Border.Color, Normal);
       bTop := Border.Size;
     end;
 
     if eBottom in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y + Height - Border.Size,
-        X + Width, Y + Height), Border.Color, beNormal);
+        X + Width, Y + Height), Border.Color, Normal);
       bBottom := Border.Size;
     end;
 
     if eLeft in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X, Y + bTop, X + Border.Size,
-        Y + Height - bBottom), Border.Color, beNormal);
+        Y + Height - bBottom), Border.Color, Normal);
 
     if eRight in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X + Width - Border.Size, Y + bTop,
-        X + Width, Y + Height - bBottom), Border.Color, beNormal);
+        X + Width, Y + Height - bBottom), Border.Color, Normal);
   end;
 
   // Draw DisplayText
@@ -749,7 +752,7 @@ begin
 
     // Set Rect Canvas
     ControlManager.Canvas.ClipRect :=
-      ShortRect(Rect(X - 1, Y, X + AWidth, Y + AHeight), ARect);
+      IntRect(Rect(X - 1, Y, X + AWidth, Y + AHeight), ARect);
 
     // Get chars from text
     Index := 0;
@@ -757,8 +760,7 @@ begin
     while Index < Length(Text) do
     begin
       AChars[Index].Char := Text[Index + 1];
-      AChars[Index].Width := Round(AFont.TextWidth(Text[Index + 1]) +
-        AFont.Kerning);
+      AChars[Index].Width := Round(AFont.TextWidth(Text[Index + 1]) (*+ AFont.Kerning*));
       Inc(Index);
     end;
 
@@ -787,32 +789,32 @@ begin
       begin
         if Index = AMin then
           ControlManager.Canvas.FillRect(Rect(X - 1, Y, X + AChars[Index].Width,
-            Y + AHeight), cColor4(FFont.SelectionColor), beNormal)
+            Y + AHeight), cColor4(FFont.SelectionColor), Normal)
         else
           ControlManager.Canvas.FillRect(Rect(X, Y, X + AChars[Index].Width,
-            Y + AHeight), cColor4(FFont.SelectionColor), beNormal);
+            Y + AHeight), cColor4(FFont.SelectionColor), Normal);
 
         if (Index = AMin) and (Index = (AMax - 1)) then
           ControlManager.Canvas.FillRect
             (Rect(X, Y + 1, X + AChars[Index].Width - 1, Y + AHeight - 1),
-            cColor4($25FFFFFF), beNormal)
+            cColor4($25FFFFFF), Normal)
         else if Index = AMin then
           ControlManager.Canvas.FillRect(Rect(X, Y + 1, X + AChars[Index].Width,
-            Y + AHeight - 1), cColor4($25FFFFFF), beNormal)
+            Y + AHeight - 1), cColor4($25FFFFFF), Normal)
         else if Index = (AMax - 1) then
           ControlManager.Canvas.FillRect
             (Rect(X, Y + 1, X + AChars[Index].Width - 1, Y + AHeight - 1),
-            cColor4($25FFFFFF), beNormal)
+            cColor4($25FFFFFF), Normal)
         else
           ControlManager.Canvas.FillRect(Rect(X, Y + 1, X + AChars[Index].Width,
-            Y + AHeight - 1), cColor4($25FFFFFF), beNormal);
+            Y + AHeight - 1), cColor4($25FFFFFF), Normal);
 
-        AFont.TextOut(Point2(X, Y + (AHeight div 2) - (AFont.FontSize.Y div 2) -
+        AFont.DrawText(Point2(X, Y + (AHeight div 2) - (AFont.FontSize.Y div 2) -
           1), AChars[Index].Char, cColor2($B0FFFFFF), 1.0);
       end
       else
       begin
-        AFont.TextOut(Point2(X, Y + (AHeight div 2) - (AFont.FontSize.Y div 2) -
+        AFont.DrawText(Point2(X, Y + (AHeight div 2) - (AFont.FontSize.Y div 2) -
           1), AChars[Index].Char, cColor2(FFont.Color), 1.0);
       end;
 
@@ -821,10 +823,10 @@ begin
       begin
         if (Index = FSelection.StartPos) and (Index = FSelection.EndPos) then
           ControlManager.Canvas.Line(Point2(X, Y),
-            Point2(X, Y + AHeight), clBlack1)
+            Point2(X, Y + AHeight), IntColorBlack)
         else if Index = FSelection.EndPos then
           ControlManager.Canvas.Line(Point2(X - 1, Y),
-            Point2(X - 1, Y + AHeight), clBlack1);
+            Point2(X - 1, Y + AHeight), IntColorBlack);
       end;
 
       // Set Next X position
@@ -843,12 +845,12 @@ begin
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fLight) then
   begin
     ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($40FFFFFF), beNormal);
+      Y + Height + 1), cColor4($40FFFFFF), Normal);
   end;
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fDark) then
   begin
     ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($20000000), beNormal);
+      Y + Height + 1), cColor4($20000000), Normal);
   end;
 
 end;

@@ -58,8 +58,10 @@ interface
 
 uses
   System.Classes, System.SysUtils,
-  // Asphyre Units
-  AbstractCanvas, AsphyreImages, AsphyreTypes,
+  // PXL Units
+  PXL.Canvas,
+  PXL.Images,
+  PXL.Types,
   // Tulip UI Units
   Tulip.UI.Controls, Tulip.UI.Classes, Tulip.UI.Types, Tulip.UI.Forms,
   Tulip.UI.Utils;
@@ -222,22 +224,25 @@ end;
 procedure TCustomAImage.Paint;
 var
   X, Y: Integer;
-  AImage: TAsphyreImage;
+  AImage: TAtlasImage;
   bTop, bBottom: TConstraintSize;
 begin
   // Set initial values
   X := ClientLeft;
   Y := ClientTop;
 
-  ControlManager.Canvas.Antialias := FAntialiased;
+  if FAntialiased then
+    Include(ControlManager.Canvas.Attributes, Antialias)
+  else
+    Exclude(ControlManager.Canvas.Attributes, Antialias);
 
   // Draw Background
   AImage := ControlManager.Images.Image[FImage.Image];
   if AImage <> nil then
   begin
-    ControlManager.Canvas.UseImagePx(AImage, pRect4(FImage.Rect));
-    ControlManager.Canvas.TexMap(pRect4(Rect(X, Y, X + Width, Y + Height)),
-      cAlpha4(FColor), beNormal);
+    ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImage.Rect));
+    ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
+      cAlpha4(FColor), Normal);
   end;
 
   // Draw Border
@@ -249,24 +254,24 @@ begin
     if eTop in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Border.Size),
-        Border.Color, beNormal);
+        Border.Color, Normal);
       bTop := Border.Size;
     end;
 
     if eBottom in Border.Edges then
     begin
       ControlManager.Canvas.FillRect(Rect(X, Y + Height - Border.Size,
-        X + Width, Y + Height), Border.Color, beNormal);
+        X + Width, Y + Height), Border.Color, Normal);
       bBottom := Border.Size;
     end;
 
     if eLeft in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X, Y + bTop, X + Border.Size,
-        Y + Height - bBottom), Border.Color, beNormal);
+        Y + Height - bBottom), Border.Color, Normal);
 
     if eRight in Border.Edges then
       ControlManager.Canvas.FillRect(Rect(X + Width - Border.Size, Y + bTop,
-        X + Width, Y + Height - bBottom), Border.Color, beNormal);
+        X + Width, Y + Height - bBottom), Border.Color, Normal);
   end;
 end;
 

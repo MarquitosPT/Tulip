@@ -58,9 +58,13 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes,
-  // Asphyre units
-  AbstractDevices, AbstractCanvas, AsphyreArchives, AsphyreFonts, AsphyreImages,
-  AsphyreTypes,
+  // pxl units
+  PXL.Devices,
+  PXL.Canvas,
+  PXL.Archives,
+  PXL.Fonts,
+  PXL.Images,
+  PXL.SwapChains,
   // Tulip UI Units
   Tulip.UI.Types, Tulip.UI.Classes, Tulip.UI.Utils, Tulip.UI.Helpers;
 
@@ -286,10 +290,10 @@ type
 
   TCustomManager = class(TObject)
   private
-    FDevice: TAsphyreDevice;
-    FCanvas: TAsphyreCanvas;
-    FImages: TAsphyreImages;
-    FFonts: TAsphyreFonts;
+    FDevice: TCustomDevice;
+    FCanvas: TCustomCanvas;
+    FImages: TAtlasImages;
+    FFonts: TBitmapFonts;
 
     FActiveControl: TWControl;
     FPrevControl: TAControl;
@@ -349,15 +353,14 @@ type
     property OwnerShortCut: TShortCutEvent read FOwnerShortCut
       write FOwnerShortCut;
   public
-    constructor Create(const AOwner: TComponent; const ADevice: TAsphyreDevice;
-      const ACanvas: TAsphyreCanvas); virtual;
+    constructor Create(const AOwner: TComponent; const ADevice: TCustomDevice; const ACanvas: TCustomCanvas); virtual;
 
     destructor Destroy; override;
 
-    function LoadFromArchive(const Archive: TAsphyreArchive): Boolean;
+    function LoadFromArchive(const Archive: TArchive): Boolean;
     function LoadFromArchiveFile(const FileName: string): Boolean;
 
-    function SaveToArchive(const Archive: TAsphyreArchive): Boolean;
+    function SaveToArchive(const Archive: TArchive): Boolean;
     function SaveToArchiveFile(const FileName: string): Boolean;
 
     procedure Render; // Render all Controls.
@@ -374,10 +377,10 @@ type
     property Root: TWRoot read FRoot;
     // The root container that contains all the components
 
-    property Device: TAsphyreDevice read FDevice write FDevice;
-    property Canvas: TAsphyreCanvas read FCanvas write FCanvas;
-    property Fonts: TAsphyreFonts read FFonts write FFonts;
-    property Images: TAsphyreImages read FImages;
+    property Device: TCustomDevice read FDevice write FDevice;
+    property Canvas: TCustomCanvas read FCanvas write FCanvas;
+    property Fonts: TBitmapFonts read FFonts write FFonts;
+    property Images: TAtlasImages read FImages;
     property Parent: TComponent read FParent write SetParent;
   end;
 
@@ -1448,32 +1451,32 @@ begin
   FRoot.Images.Clear;
 
   // free current fonts
-  FFonts.RemoveAll;
-  FFonts.Images.RemoveAll;
+  FFonts.Clear;
+  //FFonts.Images.RemoveAll;
   FFonts.Canvas := FCanvas;
 
   // free current images
-  FImages.RemoveAll;
+  FImages.Clear;
 end;
 
 constructor TCustomManager.Create(const AOwner: TComponent;
-  const ADevice: TAsphyreDevice; const ACanvas: TAsphyreCanvas);
+  const ADevice: TCustomDevice; const ACanvas: TCustomCanvas);
 begin
   FDevice := ADevice;
   FCanvas := ACanvas;
-  FFonts := TAsphyreFonts.Create;
-  FFonts.Images := TAsphyreImages.Create;
-  FImages := TAsphyreImages.Create;
+  FFonts := TBitmapFonts.Create(ADevice);
+  //FFonts.Images := TAsphyreImages.Create;
+  FImages := TAtlasImages.Create(ADevice);
   Parent := AOwner;
 
   FRoot := TWRoot.Create(nil);
   FRoot.Left := 0;
   FRoot.Top := 0;
 
-  if ADevice <> nil then
+  if (ADevice <> nil) and (ADevice is TCustomSwapChainDevice) then
   begin
-    FRoot.Width := ADevice.SwapChains.Items[0].Width;
-    FRoot.Height := ADevice.SwapChains.Items[0].Height;
+    FRoot.Width := TCustomSwapChainDevice(ADevice).SwapChains.Items[0].Width;
+    FRoot.Height := TCustomSwapChainDevice(ADevice).SwapChains.Items[0].Height;
   end
   else
   begin
@@ -1495,9 +1498,10 @@ begin
   FCanvas := nil;
   FParent := nil;
 
-  FFonts.Images.RemoveAll;
-  FFonts.Images.Free;
-  FImages.RemoveAll;
+  //FFonts.Images.RemoveAll;
+  //FFonts.Images.Free;
+  FFonts.Clear;
+  FImages.Clear;
   FreeAndNil(FFonts);
   FreeAndNil(FImages);
   FreeAndNil(FRoot);
@@ -1505,7 +1509,7 @@ begin
   inherited Destroy;
 end;
 
-function TCustomManager.LoadFromArchive(const Archive: TAsphyreArchive)
+function TCustomManager.LoadFromArchive(const Archive: TArchive)
   : Boolean;
 var
   AControl: TWRoot;
@@ -1529,10 +1533,10 @@ begin
     end;
 
     // Set Device size again
-    if FDevice <> nil then
+    if (FDevice <> nil) and (FDevice is TCustomSwapChainDevice) then
     begin
-      FRoot.Width := FDevice.SwapChains.Items[0].Width;
-      FRoot.Height := FDevice.SwapChains.Items[0].Height;
+      FRoot.Width := TCustomSwapChainDevice(FDevice).SwapChains.Items[0].Width;
+      FRoot.Height := TCustomSwapChainDevice(FDevice).SwapChains.Items[0].Height;
     end;
 
     if FRoot.Fonts.Count > 0 then
@@ -1553,12 +1557,11 @@ end;
 
 function TCustomManager.LoadFromArchiveFile(const FileName: string): Boolean;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomReadOnly;
+  Media.OpenMode := TArchive.TOpenMode.ReadOnly;
 
   Result := Media.OpenFile(FileName);
 
@@ -1578,7 +1581,7 @@ begin
   FRoot.Paint;
 end;
 
-function TCustomManager.SaveToArchive(const Archive: TAsphyreArchive): Boolean;
+function TCustomManager.SaveToArchive(const Archive: TArchive): Boolean;
 var
   Stream: TMemoryStream;
   I: Integer;
@@ -1624,20 +1627,18 @@ begin
   Stream := TMemoryStream.Create();
   Stream.WriteComponent(FRoot);
 
-  Result := Archive.WriteRecord('Interface.ui', Stream.Memory,
-    Stream.Size, artFile);
+  Result := Archive.WriteStream('Interface.ui', Stream, TArchive.TEntryType.AnyFile);
 
   Stream.Free();
 end;
 
 function TCustomManager.SaveToArchiveFile(const FileName: string): Boolean;
 var
-  Media: TAsphyreArchive;
+  Media: TArchive;
 begin
-  Media := TAsphyreArchive.Create;
+  Media := TArchive.Create;
 
-  ArchiveTypeAccess := ataAnyFile;
-  Media.OpenMode := aomOverwrite;
+  Media.OpenMode := TArchive.TOpenMode.Update;
 
   Result := Media.OpenFile(FileName);
 
