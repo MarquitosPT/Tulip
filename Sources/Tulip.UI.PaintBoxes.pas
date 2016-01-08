@@ -204,10 +204,11 @@ procedure TCustomAPaintBox.Paint;
 begin
   if Assigned(FOnPaint) then
   begin
-    if FAntialiased then
-      Include(ControlManager.Canvas.Attributes, Antialias)
-    else
-      Exclude(ControlManager.Canvas.Attributes, Antialias);
+//    if FAntialiased then
+//      Include(ControlManager.Canvas.Attributes, Antialias)
+//    else
+//      Exclude(ControlManager.Canvas.Attributes, Antialias);
+
     FOnPaint(Self);
   end;
 end;

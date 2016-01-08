@@ -255,10 +255,10 @@ begin
   X := ClientLeft;
   Y := ClientTop;
 
-  if FAntialiased then
-    Include(ControlManager.Canvas.Attributes, Antialias)
-  else
-    Exclude(ControlManager.Canvas.Attributes, Antialias);
+//  if FAntialiased then
+//    Include(ControlManager.Canvas.Attributes, Antialias)
+//  else
+//    Exclude(ControlManager.Canvas.Attributes, Antialias);
 
   // Draw Background
   if not FTransparent then
@@ -268,12 +268,12 @@ begin
     begin
       ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImage.Rect));
       ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
-        cAlpha4(FColor), Normal);
+        cAlpha4(FColor), TBlendingEffect.Normal);
     end
     else
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Height),
-        cColor4(FColor), Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y, X + Width, Y + Height),
+        cColor4(FColor), TBlendingEffect.Normal);
     end;
   end;
 
@@ -285,25 +285,25 @@ begin
 
     if eTop in Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Border.Size),
-        Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y, X + Width, Y + Border.Size),
+        Border.Color, TBlendingEffect.Normal);
       bTop := Border.Size;
     end;
 
     if eBottom in Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y + Height - Border.Size,
-        X + Width, Y + Height), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + Height - Border.Size,
+        X + Width, Y + Height), Border.Color, TBlendingEffect.Normal);
       bBottom := Border.Size;
     end;
 
     if eLeft in Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(X, Y + bTop, X + Border.Size,
-        Y + Height - bBottom), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + bTop, X + Border.Size,
+        Y + Height - bBottom), Border.Color, TBlendingEffect.Normal);
 
     if eRight in Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(X + Width - Border.Size, Y + bTop,
-        X + Width, Y + Height - bBottom), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X + Width - Border.Size, Y + bTop,
+        X + Width, Y + Height - bBottom), Border.Color, TBlendingEffect.Normal);
   end;
 
   // Draw DisplayText

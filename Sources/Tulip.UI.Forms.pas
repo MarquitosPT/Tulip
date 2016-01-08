@@ -272,7 +272,7 @@ var
   AImage: TAtlasImage;
   bTop, bBottom: TConstraintSize;
   I: Integer;
-  ARect: TRect;
+  ARect: TIntRect;
   AHeight, AWidth: Integer;
   vLeft, vTop: Integer;
 begin
@@ -283,10 +283,10 @@ begin
   X := ClientLeft;
   Y := ClientTop;
 
-  if FAntialiased then
-    Include(ControlManager.Canvas.Attributes, Antialias)
-  else
-    Exclude(ControlManager.Canvas.Attributes, Antialias);
+//  if FAntialiased then
+//    Include(ControlManager.Canvas.Attributes, Antialias)
+//  else
+//    Exclude(ControlManager.Canvas.Attributes, Antialias);
 
   if FShadow then
   begin
@@ -294,24 +294,24 @@ begin
     I := 12;
     while I > 5 do
     begin
-      ControlManager.Canvas.FillRect(Rect(X - I, Y - I, X + Width + I,
-        Y + Height + I), cAlpha4(1), Shadow);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X - I, Y - I, X + Width + I,
+        Y + Height + I), cAlpha4(1), TBlendingEffect.Shadow);
       Dec(I, 2);
     end;
 
     I := 5;
     while I > 3 do
     begin
-      ControlManager.Canvas.FillRect(Rect(X - I, Y - I, X + Width + I,
-        Y + Height + I), cAlpha4(2), Shadow);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X - I, Y - I, X + Width + I,
+        Y + Height + I), cAlpha4(2), TBlendingEffect.Shadow);
       Dec(I, 1);
     end;
 
     I := 3;
     while I > 0 do
     begin
-      ControlManager.Canvas.FillRect(Rect(X - I, Y - I, X + Width + I,
-        Y + Height + I), cAlpha4(4), Shadow);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X - I, Y - I, X + Width + I,
+        Y + Height + I), cAlpha4(4), TBlendingEffect.Shadow);
       Dec(I, 1);
     end;
   end;
@@ -322,12 +322,12 @@ begin
   begin
     ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImage.Rect));
     ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
-      cAlpha4(FColor), Normal);
+      cAlpha4(FColor), TBlendingEffect.Normal);
   end
   else
   begin
-    ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Height),
-      cColor4(FColor), Normal);
+    ControlManager.Canvas.FillRect(FloatRectBDS(X, Y, X + Width, Y + Height),
+      cColor4(FColor), TBlendingEffect.Normal);
   end;
 
   // Draw Border
@@ -338,25 +338,25 @@ begin
 
     if eTop in Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Border.Size),
-        Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y, X + Width, Y + Border.Size),
+        Border.Color, TBlendingEffect.Normal);
       bTop := Border.Size;
     end;
 
     if eBottom in Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y + Height - Border.Size,
-        X + Width, Y + Height), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + Height - Border.Size,
+        X + Width, Y + Height), Border.Color, TBlendingEffect.Normal);
       bBottom := Border.Size;
     end;
 
     if eLeft in Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(X, Y + bTop, X + Border.Size,
-        Y + Height - bBottom), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + bTop, X + Border.Size,
+        Y + Height - bBottom), Border.Color, TBlendingEffect.Normal);
 
     if eRight in Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(X + Width - Border.Size, Y + bTop,
-        X + Width, Y + Height - bBottom), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X + Width - Border.Size, Y + bTop,
+        X + Width, Y + Height - bBottom), Border.Color, TBlendingEffect.Normal);
   end;
 
   // Draw DisplayText
@@ -381,15 +381,15 @@ begin
 
       // Set Rect Canvas
       ControlManager.Canvas.ClipRect :=
-        IntRect(Rect(X - 1, Y, X + AWidth, Y + AHeight), ARect);
+        IntersectRect(IntRectBDS(X - 1, Y, X + AWidth, Y + AHeight), ARect);
 
       case Self.FFont.VerticalAlign of
         aTop:
           vTop := Y;
         aMiddle:
-          vTop := Y + (AHeight div 2) - (AFont.TextHeight(FCaption) div 2);
+          vTop := Y + (AHeight div 2) - (Trunc(AFont.TextHeight(FCaption)) div 2);
         aBottom:
-          vTop := Y + AHeight - AFont.TextHeight(FCaption);
+          vTop := Y + AHeight - Trunc(AFont.TextHeight(FCaption));
         else
           vTop := X;
       end;

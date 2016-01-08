@@ -28,7 +28,8 @@ package Tulip;
 {$IMPLICITBUILD ON}
 
 requires
-  rtl;
+  rtl,
+  vcl;
 
 contains
   Tulip.UI.Buttons in 'Tulip.UI.Buttons.pas',

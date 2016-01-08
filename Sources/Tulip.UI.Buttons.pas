@@ -335,13 +335,16 @@ begin
     begin
       if csClicked in ControlState then
       begin
-        ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImagePressed.Rect));
-        ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
+        ControlManager.Canvas.UseImagePx(AImage,
+          FloatRect4(FImagePressed.Rect));
+        ControlManager.Canvas.TexQuad(
+          FloatRect4(Rect(X, Y, X + Width, Y + Height)),
           cAlpha4(AColor), TBlendingEffect.Normal);
       end
       else if csMouseHover in ControlState then
       begin
-        ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImageHover.Rect));
+        ControlManager.Canvas.UseImagePx(AImage,
+          FloatRect4(FImageHover.Rect));
         ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
           cAlpha4(AColor), TBlendingEffect.Normal);
       end
@@ -355,7 +358,7 @@ begin
     end
     else
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Height),
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y, X + Width, Y + Height),
         cColor4(AColor), TBlendingEffect.Normal);
     end;
   end;
@@ -382,24 +385,24 @@ begin
 
     if eTop in Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Border.Size),
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y, X + Width, Y + Border.Size),
         ABorderColor, TBlendingEffect.Normal);
       bTop := Border.Size;
     end;
 
     if eBottom in Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y + Height - Border.Size,
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + Height - Border.Size,
         X + Width, Y + Height), ABorderColor, TBlendingEffect.Normal);
       bBottom := Border.Size;
     end;
 
     if eLeft in Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(X, Y + bTop, X + Border.Size,
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + bTop, X + Border.Size,
         Y + Height - bBottom), ABorderColor, TBlendingEffect.Normal);
 
     if eRight in Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(X + Width - Border.Size, Y + bTop,
+      ControlManager.Canvas.FillRect(FloatRectBDS(X + Width - Border.Size, Y + bTop,
         X + Width, Y + Height - bBottom), ABorderColor, TBlendingEffect.Normal);
   end;
 
@@ -430,22 +433,22 @@ begin
   // Draw Shadow
   if (Shadow = True) then
   begin
-    ControlManager.Canvas.FillRect(Rect(X + Width, Y + 1, X + Width + 1,
-      Y + Height), cColor4($40000000), TBlendingEffect.Shadow);
-    ControlManager.Canvas.FillRect(Rect(X + 1, Y + Height, X + Width + 1,
-      Y + Height + 1), cColor4($40000000), TBlendingEffect.Shadow);
+    ControlManager.Canvas.FillRect(FloatRectBDS(X + Width, Y + 1, X + Width + 1,
+      Y + Height), IntColor4($40000000), TBlendingEffect.Shadow);
+    ControlManager.Canvas.FillRect(FloatRectBDS(X + 1, Y + Height, X + Width + 1,
+      Y + Height + 1), IntColor4($40000000), TBlendingEffect.Shadow);
   end;
 
   // Draw Focus rect
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fLight) then
   begin
-    ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($40FFFFFF), TBlendingEffect.Normal);
+    ControlManager.Canvas.FrameRect(FloatRectBDS(X - 1, Y - 1, X + Width + 1,
+      Y + Height + 1), IntColor4($40FFFFFF), TBlendingEffect.Normal);
   end;
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fDark) then
   begin
-    ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($30000000), TBlendingEffect.Normal);
+    ControlManager.Canvas.FrameRect(FloatRectBDS(X - 1, Y - 1, X + Width + 1,
+      Y + Height + 1), IntColor4($30000000), TBlendingEffect.Normal);
   end;
 
 end;

@@ -58,6 +58,7 @@ interface
 
 uses
   System.Classes,
+  System.Types,
   // PXL units
   PXL.Bitmaps,
   PXL.ImageFormats,
@@ -66,10 +67,12 @@ uses
   Tulip.UI.Classes;
 {$REGION 'Colors'}
 function cAlpha4(c: TFillColor): TIntColor4; overload;
+function cAlpha4(c: TIntColor): TIntColor4; overload;
 function cColor2(c: TTextColor): TIntColor2; overload;
 function cColor4(c: TFillColor): TIntColor4; overload;
 function cColor4(c: TTextColor): TIntColor4; overload;
 {$ENDREGION}
+function FloatRect4(Rect: TRect): TFloatRect4; overload;
 {$REGION 'Lists'}
 procedure ListAdd(var List: TList; Item: Pointer);
 procedure ListRemove(var List: TList; Item: Pointer);
@@ -95,6 +98,14 @@ begin
   Result.Values[3] := IntColorAlpha(c.BottomLeft);
 end;
 
+function cAlpha4(c: TIntColor): TIntColor4; overload;
+begin
+  Result.Values[0] := IntColorAlpha(c);
+  Result.Values[1] := IntColorAlpha(c);
+  Result.Values[2] := IntColorAlpha(c);
+  Result.Values[3] := IntColorAlpha(c);
+end;
+
 function cColor2(c: TTextColor): TIntColor2;
 begin
   Result.Values[0] := c.Top;
@@ -117,6 +128,19 @@ begin
   Result.Values[3] := c.Bottom;
 end;
 {$ENDREGION}
+
+function FloatRect4(Rect: TRect): TFloatRect4;
+begin
+  Result.TopLeft.X := Rect.Left;
+  Result.TopLeft.Y := Rect.Top;
+  Result.TopRight.X := Rect.Left + Rect.Width;
+  Result.TopRight.Y := Rect.Top;
+  Result.BottomRight.X := Result.TopRight.X;
+  Result.BottomRight.Y := Rect.Top + Rect.Height;
+  Result.BottomLeft.X := Rect.Left;
+  Result.BottomLeft.Y := Result.BottomRight.Y;
+end;
+
 {$REGION 'Lists'}
 
 procedure ListAdd(var List: TList; Item: Pointer);

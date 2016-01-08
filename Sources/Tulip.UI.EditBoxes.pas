@@ -680,7 +680,7 @@ var
   Index, X, Y, AWidth, AHeight, AVirtualCursor: Integer;
   AMin, AMax: Integer;
   AChars: TAChars;
-  ARect: TRect;
+  ARect: TIntRect;
   bTop, bBottom: TConstraintSize;
   AImage: TAtlasImage;
   AFont: TBitmapFont;
@@ -692,10 +692,10 @@ begin
   X := ClientLeft;
   Y := ClientTop;
 
-  if FAntialiased then
-    Include(ControlManager.Canvas.Attributes, Antialias)
-  else
-    Exclude(ControlManager.Canvas.Attributes, Antialias);
+//  if FAntialiased then
+//    Include(ControlManager.Canvas.Attributes, Antialias)
+//  else
+//    Exclude(ControlManager.Canvas.Attributes, Antialias);
 
   // Draw Background
   AImage := ControlManager.Images.Image[FImage.Image];
@@ -703,12 +703,12 @@ begin
   begin
     ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImage.Rect));
     ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
-      cAlpha4(FColor), Normal);
+      cAlpha4(FColor), TBlendingEffect.Normal);
   end
   else
   begin
-    ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Height),
-      cColor4(FColor), Normal);
+    ControlManager.Canvas.FillRect(FloatRectBDS(X, Y, X + Width, Y + Height),
+      cColor4(FColor), TBlendingEffect.Normal);
   end;
 
   // Draw Border
@@ -719,25 +719,25 @@ begin
 
     if eTop in Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Border.Size),
-        Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y, X + Width, Y + Border.Size),
+        Border.Color, TBlendingEffect.Normal);
       bTop := Border.Size;
     end;
 
     if eBottom in Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y + Height - Border.Size,
-        X + Width, Y + Height), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + Height - Border.Size,
+        X + Width, Y + Height), Border.Color, TBlendingEffect.Normal);
       bBottom := Border.Size;
     end;
 
     if eLeft in Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(X, Y + bTop, X + Border.Size,
-        Y + Height - bBottom), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + bTop, X + Border.Size,
+        Y + Height - bBottom), Border.Color, TBlendingEffect.Normal);
 
     if eRight in Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(X + Width - Border.Size, Y + bTop,
-        X + Width, Y + Height - bBottom), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X + Width - Border.Size, Y + bTop,
+        X + Width, Y + Height - bBottom), Border.Color, TBlendingEffect.Normal);
   end;
 
   // Draw DisplayText
@@ -752,7 +752,7 @@ begin
 
     // Set Rect Canvas
     ControlManager.Canvas.ClipRect :=
-      IntRect(Rect(X - 1, Y, X + AWidth, Y + AHeight), ARect);
+      IntersectRect(IntRectBDS(X - 1, Y, X + AWidth, Y + AHeight), ARect);
 
     // Get chars from text
     Index := 0;
@@ -788,33 +788,33 @@ begin
       if (Index >= AMin) and (Index < AMax) then
       begin
         if Index = AMin then
-          ControlManager.Canvas.FillRect(Rect(X - 1, Y, X + AChars[Index].Width,
-            Y + AHeight), cColor4(FFont.SelectionColor), Normal)
+          ControlManager.Canvas.FillRect(FloatRectBDS(X - 1, Y, X + AChars[Index].Width,
+            Y + AHeight), cColor4(FFont.SelectionColor), TBlendingEffect.Normal)
         else
-          ControlManager.Canvas.FillRect(Rect(X, Y, X + AChars[Index].Width,
-            Y + AHeight), cColor4(FFont.SelectionColor), Normal);
+          ControlManager.Canvas.FillRect(FloatRectBDS(X, Y, X + AChars[Index].Width,
+            Y + AHeight), cColor4(FFont.SelectionColor), TBlendingEffect.Normal);
 
         if (Index = AMin) and (Index = (AMax - 1)) then
           ControlManager.Canvas.FillRect
-            (Rect(X, Y + 1, X + AChars[Index].Width - 1, Y + AHeight - 1),
-            cColor4($25FFFFFF), Normal)
+            (FloatRectBDS(X, Y + 1, X + AChars[Index].Width - 1, Y + AHeight - 1),
+            IntColor4($25FFFFFF), TBlendingEffect.Normal)
         else if Index = AMin then
-          ControlManager.Canvas.FillRect(Rect(X, Y + 1, X + AChars[Index].Width,
-            Y + AHeight - 1), cColor4($25FFFFFF), Normal)
+          ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + 1, X + AChars[Index].Width,
+            Y + AHeight - 1), IntColor4($25FFFFFF), TBlendingEffect.Normal)
         else if Index = (AMax - 1) then
           ControlManager.Canvas.FillRect
-            (Rect(X, Y + 1, X + AChars[Index].Width - 1, Y + AHeight - 1),
-            cColor4($25FFFFFF), Normal)
+            (FloatRectBDS(X, Y + 1, X + AChars[Index].Width - 1, Y + AHeight - 1),
+            IntColor4($25FFFFFF), TBlendingEffect.Normal)
         else
-          ControlManager.Canvas.FillRect(Rect(X, Y + 1, X + AChars[Index].Width,
-            Y + AHeight - 1), cColor4($25FFFFFF), Normal);
+          ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + 1, X + AChars[Index].Width,
+            Y + AHeight - 1), IntColor4($25FFFFFF), TBlendingEffect.Normal);
 
-        AFont.DrawText(Point2(X, Y + (AHeight div 2) - (AFont.FontSize.Y div 2) -
-          1), AChars[Index].Char, cColor2($B0FFFFFF), 1.0);
+        AFont.DrawText(Point2(X, Y + (AHeight div 2) - (AFont.Size.Y div 2) -
+          1), AChars[Index].Char, IntColor2($B0FFFFFF), 1.0);
       end
       else
       begin
-        AFont.DrawText(Point2(X, Y + (AHeight div 2) - (AFont.FontSize.Y div 2) -
+        AFont.DrawText(Point2(X, Y + (AHeight div 2) - (AFont.Size.Y div 2) -
           1), AChars[Index].Char, cColor2(FFont.Color), 1.0);
       end;
 
@@ -844,13 +844,13 @@ begin
   // Draw Focus rect
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fLight) then
   begin
-    ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($40FFFFFF), Normal);
+    ControlManager.Canvas.FrameRect(FloatRectBDS(X - 1, Y - 1, X + Width + 1,
+      Y + Height + 1), IntColor4($40FFFFFF), TBlendingEffect.Normal);
   end;
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fDark) then
   begin
-    ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($20000000), Normal);
+    ControlManager.Canvas.FrameRect(FloatRectBDS(X - 1, Y - 1, X + Width + 1,
+      Y + Height + 1), IntColor4($20000000), TBlendingEffect.Normal);
   end;
 
 end;

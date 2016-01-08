@@ -390,10 +390,10 @@ begin
   X := ClientLeft;
   Y := ClientTop;
 
-  if FAntialiased then
-    Include(ControlManager.Canvas.Attributes, Antialias)
-  else
-    Exclude(ControlManager.Canvas.Attributes, Antialias);
+//  if FAntialiased then
+//    Include(ControlManager.Canvas.Attributes, Antialias)
+//  else
+//    Exclude(ControlManager.Canvas.Attributes, Antialias);
 
   // Draw Background
   if not FTransparent then
@@ -403,12 +403,12 @@ begin
     begin
       ControlManager.Canvas.UseImagePx(AImage, FloatRect4(FImage.Rect));
       ControlManager.Canvas.TexQuad(FloatRect4(Rect(X, Y, X + Width, Y + Height)),
-        cAlpha4(FColor), Normal);
+        cAlpha4(FColor), TBlendingEffect.Normal);
     end
     else
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Height),
-        cColor4(FColor), Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y, X + Width, Y + Height),
+        cColor4(FColor), TBlendingEffect.Normal);
     end;
   end;
 
@@ -420,37 +420,37 @@ begin
 
     if eTop in Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y, X + Width, Y + Border.Size),
-        Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y, X + Width, Y + Border.Size),
+        Border.Color, TBlendingEffect.Normal);
       bTop := Border.Size;
     end;
 
     if eBottom in Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(X, Y + Height - Border.Size,
-        X + Width, Y + Height), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + Height - Border.Size,
+        X + Width, Y + Height), Border.Color, TBlendingEffect.Normal);
       bBottom := Border.Size;
     end;
 
     if eLeft in Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(X, Y + bTop, X + Border.Size,
-        Y + Height - bBottom), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X, Y + bTop, X + Border.Size,
+        Y + Height - bBottom), Border.Color, TBlendingEffect.Normal);
 
     if eRight in Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(X + Width - Border.Size, Y + bTop,
-        X + Width, Y + Height - bBottom), Border.Color, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(X + Width - Border.Size, Y + bTop,
+        X + Width, Y + Height - bBottom), Border.Color, TBlendingEffect.Normal);
   end;
 
   // Draw Focus rect
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fLight) then
   begin
-    ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($40FFFFFF), Normal);
+    ControlManager.Canvas.FrameRect(FloatRectBDS(X - 1, Y - 1, X + Width + 1,
+      Y + Height + 1), IntColor4($40FFFFFF), TBlendingEffect.Normal);
   end;
   if (ControlManager.ActiveControl = Self) and (Self.FocusRect = fDark) then
   begin
-    ControlManager.Canvas.FrameRect(Rect(X - 1, Y - 1, X + Width + 1,
-      Y + Height + 1), cColor4($30000000), Normal);
+    ControlManager.Canvas.FrameRect(FloatRectBDS(X - 1, Y - 1, X + Width + 1,
+      Y + Height + 1), IntColor4($30000000), TBlendingEffect.Normal);
   end;
 
   // Draw button
@@ -490,16 +490,16 @@ begin
   begin
     ControlManager.Canvas.UseImagePx(AImage, FloatRect4(BtImage.Rect));
     ControlManager.Canvas.TexQuad(FloatRect4(Rect(BtL, T, BtW, H)), cAlpha4(BtColor),
-      Normal);
+      TBlendingEffect.Normal);
   end
   else
   begin
     // Draw shadow scroll area
-    ControlManager.Canvas.FillRect(Rect(L, T + (FButton.Height div 2) - 1,
-      L + W, H - (FButton.Height div 2) + 1), cColor4($20000000), Normal);
+    ControlManager.Canvas.FillRect(FloatRectBDS(L, T + (FButton.Height div 2) - 1,
+      L + W, H - (FButton.Height div 2) + 1), IntColor4($20000000), TBlendingEffect.Normal);
 
-    ControlManager.Canvas.FillRect(Rect(BtL, T, BtW, H), cColor4(BtColor),
-      Normal);
+    ControlManager.Canvas.FillRect(FloatRectBDS(BtL, T, BtW, H), cColor4(BtColor),
+      TBlendingEffect.Normal);
   end;
 
   // Draw Button Border
@@ -510,25 +510,25 @@ begin
 
     if eTop in FButton.Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(BtL, T, BtW, T + FButton.Border.Size),
-        BtBorderColor, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(BtL, T, BtW, T + FButton.Border.Size),
+        BtBorderColor, TBlendingEffect.Normal);
       bTop := FButton.Border.Size;
     end;
 
     if eBottom in FButton.Border.Edges then
     begin
-      ControlManager.Canvas.FillRect(Rect(BtL, H - FButton.Border.Size, BtW, H),
-        BtBorderColor, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(BtL, H - FButton.Border.Size, BtW, H),
+        BtBorderColor, TBlendingEffect.Normal);
       bBottom := FButton.Border.Size;
     end;
 
     if eLeft in FButton.Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(BtL, T + bTop,
-        BtL + FButton.Border.Size, H - bBottom), BtBorderColor, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(BtL, T + bTop,
+        BtL + FButton.Border.Size, H - bBottom), BtBorderColor, TBlendingEffect.Normal);
 
     if eRight in FButton.Border.Edges then
-      ControlManager.Canvas.FillRect(Rect(BtW - FButton.Border.Size, T + bTop,
-        BtW, H - bBottom), BtBorderColor, Normal);
+      ControlManager.Canvas.FillRect(FloatRectBDS(BtW - FButton.Border.Size, T + bTop,
+        BtW, H - bBottom), BtBorderColor, TBlendingEffect.Normal);
   end;
 
 end;
